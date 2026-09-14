@@ -12,7 +12,7 @@
 // ============================================================
 
 const firebaseConfig = {
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+  databaseURL: "https://firebaseio.com",
   apiKey: "AIzaSyAck8OHUco9-_7Pi566nh2avOyMHz-SdaI",
   authDomain: "safepath-ai-web.firebaseapp.com",
   projectId: "safepath-ai-web",
