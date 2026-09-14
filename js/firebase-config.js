@@ -12,13 +12,14 @@
 // ============================================================
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
   databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyAck8OHUco9-_7Pi566nh2avOyMHz-SdaI",
+  authDomain: "safepath-ai-web.firebaseapp.com",
+  projectId: "safepath-ai-web",
+  storageBucket: "safepath-ai-web.firebasestorage.app",
+  messagingSenderId: "371079690457",
+  appId: "1:371079690457:web:64543df1274324752e66c8",
+  measurementId: "G-TLQG2LHSJ1"
 };
 
 firebase.initializeApp(firebaseConfig);
