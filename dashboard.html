@@ -65,6 +65,10 @@
         <div class="num" id="todayCount">0</div>
         <div class="label" data-i18n="stat_today">Logged Today</div>
       </div>
+      <div class="stat-card severe-stat-card">
+        <div class="num severe-num" id="severeCount">0</div>
+        <div class="label" data-i18n="stat_severe">Severe Craters</div>
+      </div>
       <div class="stat-card">
         <div class="num" id="reviewCount">0</div>
         <div class="label" data-i18n="stat_review">Pending Review</div>
@@ -79,7 +83,22 @@
     </div>
 
     <div class="card">
-      <h3><span data-i18n="all_hazards_title">All Reported Hazards</span></h3>
+      <div class="card-header-with-filters">
+        <h3><span data-i18n="all_hazards_title">All Reported Hazards</span></h3>
+        <div class="dashboard-filters">
+          <select id="filterTypeSelect" class="filter-select" aria-label="Filter by Hazard Type">
+            <option value="all" data-i18n="filter_all_types">All Hazard Types</option>
+            <option value="pothole" data-i18n="filter_potholes">Potholes Only</option>
+            <option value="speed_breaker" data-i18n="filter_speedbreakers">Speed Breakers Only</option>
+          </select>
+          <select id="filterSeveritySelect" class="filter-select" aria-label="Filter by Severity">
+            <option value="all" data-i18n="filter_all_severities">All Severities</option>
+            <option value="severe" data-i18n="filter_severe">Severe Craters (&gt;36 m/s²)</option>
+            <option value="moderate" data-i18n="filter_moderate">Moderate (28–36 m/s²)</option>
+            <option value="minor" data-i18n="filter_minor">Minor Bump (22–28 m/s²)</option>
+          </select>
+        </div>
+      </div>
       <div id="hazardList">
         <div class="empty-state" data-i18n="no_hazards_dashboard">No hazards reported yet.</div>
       </div>

@@ -1,15 +1,42 @@
 // ============================================================
 // SafePath AI — Driver App Logic
-// Multi-Language Support, Automatic AI Face-Blurring,
-// Real-Time Session Photo Stream & Demystified Indoor Testing
+// Real Indian Road Conditions Tailored Edition:
+// 1. Pothole vs Unmarked Speed Breaker Z-Waveform Classification
+// 2. Speed-Gated Detection (Filters false positives when < 15 km/h)
+// 3. Hazard Severity Rating (Minor: 22-28, Moderate: 28-36, Severe Crater: >36 m/s²)
+// 4. Pre-Alert Audio Chime (Web Audio API 2-tone warning before voice)
+// 5. Night / Cockpit HUD Mode (High-contrast OLED, zero-glare, distance radar)
 // ============================================================
 
 const statusDot = document.getElementById("statusDot");
 const statusText = document.getElementById("statusText");
 const startBtn = document.getElementById("startBtn");
-const simulateBtn = document.getElementById("simulateBtn");
+const simulateBtn = document.getElementById("simulateBtn"); // legacy fallback
+const simulatePotholeMinorBtn = document.getElementById("simulatePotholeMinorBtn");
+const simulatePotholeSevereBtn = document.getElementById("simulatePotholeSevereBtn");
+const simulateSpeedBreakerBtn = document.getElementById("simulateSpeedBreakerBtn");
+const testChimeBtn = document.getElementById("testChimeBtn");
 const logList = document.getElementById("logList");
 const queueBadge = document.getElementById("queueBadge");
+
+// Speedometer & Speed Gate UI Elements
+const currentSpeedDisplay = document.getElementById("currentSpeedDisplay");
+const speedGateIndicator = document.getElementById("speedGateIndicator");
+
+// Cockpit HUD Elements
+const cockpitHudOverlay = document.getElementById("cockpitHudOverlay");
+const hudToggleBtn = document.getElementById("hudToggleBtn");
+const hudLaunchBtn = document.getElementById("hudLaunchBtn");
+const hudExitBtn = document.getElementById("hudExitBtn");
+const hudChimeTestBtn = document.getElementById("hudChimeTestBtn");
+const hudSpeedVal = document.getElementById("hudSpeedVal");
+const hudSpeedGateBadge = document.getElementById("hudSpeedGateBadge");
+const hudRadarCard = document.getElementById("hudRadarCard");
+const hudRadarIcon = document.getElementById("hudRadarIcon");
+const hudRadarHeadline = document.getElementById("hudRadarHeadline");
+const hudRadarSub = document.getElementById("hudRadarSub");
+const hudSessionHazards = document.getElementById("hudSessionHazards");
+const hudSensorState = document.getElementById("hudSensorState");
 
 // Dedicated Photo Dropzone & Stream Elements
 const photoDropzone = document.getElementById("photoDropzone");
@@ -24,18 +51,108 @@ const IMPACT_THRESHOLD = 22; // total acceleration magnitude (m/s^2)
 const ROTATION_THRESHOLD = 50; // deg/s rotational jolt from pothole drop
 const MIN_SECONDS_BETWEEN_HITS = 4; // cooldown seconds
 const ALERT_RADIUS_METERS = 120; // proximity alert distance
+const SPEED_GATE_MIN_KMH = 15; // Speed gate: require > 15 km/h to prevent phone pick-up false hits
 
 let map, driverMarker;
 let currentPos = null; // { lat, lng }
+let lastGpsPos = null;
+let lastGpsTime = 0;
+let currentSpeedKmH = 0;
 let lastLogTime = 0;
 let alertedHazardIds = new Set();
 let sessionLogs = [];
 let sessionPhotos = []; // [{ localId, photo, lat, lng, timestamp, facesBlurred }]
 let pendingPhotoLocalId = null; // latest hazard id to associate photo with
 const syncedKeys = {}; // _localId -> Firebase key
+const knownHazardsMap = new Map(); // id -> hazard object
 let gyroscopeAvailable = null;
 let lastDetectionMethod = "accel-only";
 let currentStatusKey = "status_not_started";
+let hudActive = false;
+let hudUpdateInterval = null;
+
+// Accelerometer Z-Axis Waveform Ring Buffer for Pothole vs Speed Breaker Detection
+let zSamples = []; // Array of { z, t }
+let meanZ = 9.8;   // Baseline gravity EMA
+const EMA_ALPHA = 0.04;
+let lastCalculatedMagnitude = 24.0;
+
+// ---------------------------------------------------------------
+// Web Audio API: Pre-Alert Warning Chime (Tone Before Voice)
+// Pure client-side synthesis — works 100% offline, zero assets
+// ---------------------------------------------------------------
+let audioCtx = null;
+function getAudioContext() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) audioCtx = new AudioContextClass();
+  }
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+function playPreAlertChime(severity = "minor") {
+  return new Promise((resolve) => {
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) {
+        setTimeout(resolve, 500);
+        return;
+      }
+
+      const now = ctx.currentTime;
+      if (severity === "severe") {
+        // Urgent, attention-demanding 3-tone chime for severe craters (587Hz -> 880Hz -> 1174Hz)
+        const tones = [
+          { freq: 587.33, start: 0, dur: 0.1 },
+          { freq: 880.00, start: 0.09, dur: 0.1 },
+          { freq: 1174.66, start: 0.18, dur: 0.18 },
+        ];
+        tones.forEach(({ freq, start, dur }) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freq, now + start);
+          gain.gain.setValueAtTime(0, now + start);
+          gain.gain.linearRampToValueAtTime(0.35, now + start + 0.015);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + start);
+          osc.stop(now + start + dur);
+        });
+        // 0.36s tone duration + 500ms pre-alert silence cue = ~860ms
+        setTimeout(resolve, 860);
+      } else {
+        // Pleasant two-tone warning chime (D5: 587.33 Hz -> A5: 880 Hz)
+        const tones = [
+          { freq: 587.33, start: 0, dur: 0.12 },
+          { freq: 880.00, start: 0.11, dur: 0.2 },
+        ];
+        tones.forEach(({ freq, start, dur }) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(freq, now + start);
+          gain.gain.setValueAtTime(0, now + start);
+          gain.gain.linearRampToValueAtTime(0.28, now + start + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + start);
+          osc.stop(now + start + dur);
+        });
+        // 0.31s tone duration + 500ms pre-alert silence cue = ~810ms
+        setTimeout(resolve, 810);
+      }
+    } catch (e) {
+      console.warn("Audio chime error:", e);
+      setTimeout(resolve, 500);
+    }
+  });
+}
 
 // ---------------------------------------------------------------
 // Map Setup & Theme Synchronization
@@ -65,17 +182,47 @@ function updateDriverPosition(lat, lng) {
 }
 
 // ---------------------------------------------------------------
-// Status Helper with i18n
+// Status & Speed Gate Telemetry Helpers
 // ---------------------------------------------------------------
 function setStatus(live, key, fallbackText) {
   currentStatusKey = key;
   statusDot.classList.toggle("live", live);
   const text = window.i18n ? window.i18n.t(key) : fallbackText;
   statusText.textContent = text || fallbackText;
+  if (hudSensorState) {
+    hudSensorState.textContent = live ? "ACTIVE" : "STANDBY";
+  }
+}
+
+function updateSpeedTelemetry(speedKmh) {
+  currentSpeedKmH = Math.max(0, speedKmh);
+
+  if (currentSpeedDisplay) {
+    currentSpeedDisplay.textContent = currentSpeedKmH;
+  }
+  if (hudSpeedVal) {
+    hudSpeedVal.textContent = currentSpeedKmH;
+  }
+
+  const isArmed = currentSpeedKmH >= SPEED_GATE_MIN_KMH;
+  const armedText = window.i18n ? window.i18n.t("speed_gate_armed") : "Speed Gate: Armed (>15 km/h)";
+  const gatedText = window.i18n ? window.i18n.t("speed_gate_gated") : "Speed Gate: Gated (<15 km/h — filtering false jostles)";
+
+  if (speedGateIndicator) {
+    speedGateIndicator.textContent = isArmed ? armedText : gatedText;
+    speedGateIndicator.classList.toggle("armed", isArmed);
+    speedGateIndicator.classList.toggle("gated", !isArmed);
+  }
+
+  if (hudSpeedGateBadge) {
+    hudSpeedGateBadge.textContent = isArmed ? armedText : gatedText;
+    hudSpeedGateBadge.classList.toggle("armed", isArmed);
+    hudSpeedGateBadge.classList.toggle("gated", !isArmed);
+  }
 }
 
 // ---------------------------------------------------------------
-// GPS Tracking
+// GPS Tracking with Live Speedometer & Gate Calculation
 // ---------------------------------------------------------------
 function startGPS() {
   if (!navigator.geolocation) {
@@ -84,7 +231,29 @@ function startGPS() {
   }
   navigator.geolocation.watchPosition(
     (pos) => {
-      updateDriverPosition(pos.coords.latitude, pos.coords.longitude);
+      const now = Date.now();
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      updateDriverPosition(lat, lng);
+
+      let speedKmh = 0;
+      if (typeof pos.coords.speed === "number" && !isNaN(pos.coords.speed) && pos.coords.speed >= 0) {
+        speedKmh = Math.round(pos.coords.speed * 3.6);
+      } else if (lastGpsPos && lastGpsTime) {
+        const dt = (now - lastGpsTime) / 1000;
+        if (dt > 0.5 && dt < 15) {
+          const dist = haversineMeters(lastGpsPos.lat, lastGpsPos.lng, lat, lng);
+          speedKmh = Math.round((dist / dt) * 3.6);
+        }
+      }
+      lastGpsPos = { lat, lng };
+      lastGpsTime = now;
+      updateSpeedTelemetry(speedKmh);
+
+      // Trigger radar update for HUD
+      if (hudActive) {
+        updateCockpitHud();
+      }
     },
     (err) => {
       console.error("GPS error", err);
@@ -95,13 +264,77 @@ function startGPS() {
 }
 
 // ---------------------------------------------------------------
+// Sensor Signal Processing: Z-Waveform Classification
+// Distinguish between "Pothole" and "Unmarked Speed Breaker"
+// Pothole: Instant negative drop (-Z) followed by upward hit (+Z)
+// Speed Breaker: Upward heave (+Z) followed by suspension compression (-Z)
+// ---------------------------------------------------------------
+function classifyHazardWaveform() {
+  if (zSamples.length < 3) return "pothole"; // default fallback
+
+  // Find the earliest significant peak excursion from baseline (|deltaZ| > 3.0)
+  let firstSignificantPeak = null;
+  for (const sample of zSamples) {
+    if (Math.abs(sample.z) >= 3.0) {
+      firstSignificantPeak = sample;
+      break;
+    }
+  }
+
+  if (firstSignificantPeak) {
+    // If the earliest deflection was negative, vehicle dipped into pothole first
+    if (firstSignificantPeak.z < 0) {
+      return "pothole";
+    }
+    // If the earliest deflection was positive, vehicle hit elevated speed breaker ridge
+    if (firstSignificantPeak.z > 0) {
+      return "speed_breaker";
+    }
+  }
+
+  // Secondary analysis: compare timestamp of min peak vs max peak
+  let minPeak = zSamples[0];
+  let maxPeak = zSamples[0];
+  for (const s of zSamples) {
+    if (s.z < minPeak.z) minPeak = s;
+    if (s.z > maxPeak.z) maxPeak = s;
+  }
+
+  if (minPeak.t < maxPeak.t) {
+    return "pothole"; // drop precedes impact
+  } else {
+    return "speed_breaker"; // heave precedes compression
+  }
+}
+
+// Hazard Severity Rating: Minor (22-28), Moderate (28-36), Severe Crater (>36 m/s²)
+function getSeverityRating(magnitude) {
+  if (magnitude >= 36) return "severe";
+  if (magnitude >= 28) return "moderate";
+  return "minor";
+}
+
+// ---------------------------------------------------------------
 // Automatic Motion Detection (Sensor Fusion: Accel + Gyro)
 // ---------------------------------------------------------------
 function startMotionDetection() {
   window.addEventListener("devicemotion", (event) => {
-    const a = event.accelerationIncludingGravity;
+    const a = event.accelerationIncludingGravity || event.acceleration;
     if (!a) return;
     const magnitude = Math.sqrt((a.x || 0) ** 2 + (a.y || 0) ** 2 + (a.z || 0) ** 2);
+    lastCalculatedMagnitude = magnitude;
+
+    // Maintain running gravity baseline EMA & Z-axis sample buffer
+    const rawZ = a.z || 0;
+    meanZ = EMA_ALPHA * rawZ + (1 - EMA_ALPHA) * meanZ;
+    const deltaZ = rawZ - meanZ;
+
+    const now = Date.now();
+    zSamples.push({ z: deltaZ, t: now });
+    const cutoff = now - 400; // keep last 400ms
+    while (zSamples.length > 0 && zSamples[0].t < cutoff) {
+      zSamples.shift();
+    }
 
     const r = event.rotationRate;
     let rotationMagnitude = 0;
@@ -120,7 +353,8 @@ function startMotionDetection() {
     if (magnitude > IMPACT_THRESHOLD) {
       if (!gyroscopeAvailable || rotationMagnitude > ROTATION_THRESHOLD) {
         lastDetectionMethod = gyroscopeAvailable ? "accel+gyro" : "accel-only";
-        handlePotholeDetected("sensor");
+        const detectedType = classifyHazardWaveform();
+        handleHazardDetected("sensor", detectedType, magnitude);
       }
     }
   });
@@ -143,20 +377,40 @@ async function requestMotionPermission() {
 }
 
 // ---------------------------------------------------------------
-// Handle Pothole Detection & Multilingual Voice Alerts
+// Handle Hazard Detection with Speed Gate & Severity
 // ---------------------------------------------------------------
-function handlePotholeDetected(source) {
+function handleHazardDetected(source, overrideType = null, overrideMag = null) {
   const now = Date.now();
   if (now - lastLogTime < MIN_SECONDS_BETWEEN_HITS * 1000) return;
+
+  const hazardType = overrideType || classifyHazardWaveform();
+  const magnitude = overrideMag !== null ? overrideMag : lastCalculatedMagnitude;
+  const severity = getSeverityRating(magnitude);
+
+  // SPEED-GATED DETECTION (Modification #2)
+  // Prevent false positives from phone handling, walking, or cupholder jostles
+  if (source === "sensor") {
+    if (currentSpeedKmH < SPEED_GATE_MIN_KMH) {
+      console.log(`[SafePath AI] Sensor hit filtered by speed gate: ${currentSpeedKmH} km/h < 15 km/h`);
+      const ignoredMsg = window.i18n ? window.i18n.t("speed_gate_ignored") : "Jostle ignored: Vehicle speed below 15 km/h";
+      setStatus(true, "speed_gate_ignored", ignoredMsg);
+      setTimeout(() => {
+        setStatus(true, "status_monitoring", "Monitoring live. Drive normally — hazards log automatically.");
+      }, 3500);
+      return;
+    }
+  }
+
   if (!currentPos) {
     setStatus(true, "status_waiting_gps", "Hazard felt, but waiting for GPS lock to log it...");
     return;
   }
+
   lastLogTime = now;
-  logHazard(currentPos.lat, currentPos.lng, source);
+  logHazard(currentPos.lat, currentPos.lng, source, hazardType, severity, magnitude);
 }
 
-function logHazard(lat, lng, source) {
+async function logHazard(lat, lng, source, hazardType = "pothole", severity = "minor", magnitude = 24.0) {
   const localId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   pendingPhotoLocalId = localId;
 
@@ -165,6 +419,9 @@ function logHazard(lat, lng, source) {
     lng,
     timestamp: Date.now(),
     source, // "sensor" or "simulated"
+    hazardType, // "pothole" or "speed_breaker"
+    severity, // "minor", "moderate", "severe"
+    magnitude: Math.round(magnitude * 10) / 10,
     detectionMethod: source === "sensor" ? lastDetectionMethod : "simulated",
     status: "active",
     flaggedBy: {},
@@ -178,28 +435,47 @@ function logHazard(lat, lng, source) {
   queueHazard(hazard);
   trySyncQueue();
 
-  // Map pin
+  // Color code map pins:
+  // Pothole: Amber (#f59e0b) or Crimson (#ef4444) for severe crater
+  // Speed Breaker: Purple (#a855f7)
+  const pinColor = severity === "severe" ? "#ef4444" : hazardType === "speed_breaker" ? "#a855f7" : "#f59e0b";
+  const typeLabel = hazardType === "speed_breaker" ? "Speed Breaker" : (severity === "severe" ? "Severe Crater" : "Pothole");
+
   L.circleMarker([lat, lng], {
-    radius: 9,
-    color: "#f59e0b",
+    radius: severity === "severe" ? 11 : 9,
+    color: pinColor,
     fillColor: "#090d16",
     fillOpacity: 1,
     weight: 3,
   })
     .addTo(map)
-    .bindPopup("Pothole logged here");
+    .bindPopup(`<strong>${typeLabel}</strong><br>Severity: ${severity.toUpperCase()} (${hazard.magnitude} m/s²)`);
 
   addSessionLogEntry(hazard);
 
-  // Multilingual voice speech alert
+  // 1. Play Pre-Alert Audio Chime (0.5s pause before voice alert)
+  await playPreAlertChime(severity);
+
+  // 2. Multilingual Voice Speech Alert
   if (window.i18n) {
-    window.i18n.speak("voice_detected");
+    if (severity === "severe") {
+      window.i18n.speak("voice_severe_detected");
+    } else if (hazardType === "speed_breaker") {
+      window.i18n.speak("voice_speedbreaker_detected");
+    } else {
+      window.i18n.speak("voice_pothole_detected");
+    }
   }
 
   // Update dropzone hint
   if (dropzoneHint) {
     const timeStr = new Date(hazard.timestamp).toLocaleTimeString();
-    dropzoneHint.textContent = `Attached to hazard detected at ${timeStr}`;
+    dropzoneHint.textContent = `Attached to ${typeLabel.toLowerCase()} detected at ${timeStr}`;
+  }
+
+  // Update HUD
+  if (hudSessionHazards) {
+    hudSessionHazards.textContent = sessionLogs.length;
   }
 }
 
@@ -213,14 +489,30 @@ function addSessionLogEntry(hazard) {
   el.dataset.localId = hazard._localId;
   const time = new Date(hazard.timestamp).toLocaleTimeString();
 
-  const label =
-    hazard.source === "simulated"
-      ? (window.i18n ? window.i18n.t("simulated_hit") : "Simulated hit")
-      : `${window.i18n ? window.i18n.t("impact_detected") : "Impact detected"}${
-          hazard.detectionMethod === "accel+gyro" ? " (accel+gyro)" : " (accel-only)"
-        }`;
+  const isSpeedBreaker = hazard.hazardType === "speed_breaker";
+  const typeIcon = isSpeedBreaker ? "🛑" : "🕳️";
+  const typeKey = isSpeedBreaker ? "hazard_speed_breaker" : "hazard_pothole";
+  const typeName = window.i18n ? window.i18n.t(typeKey) : (isSpeedBreaker ? "Speed Breaker" : "Pothole");
 
-  el.innerHTML = `<span><strong>${label}</strong><span class="photo-indicator" data-local-id="${hazard._localId}"></span></span><span class="time">${time}</span>`;
+  const sevKey = `severity_${hazard.severity || "minor"}`;
+  const sevName = window.i18n ? window.i18n.t(sevKey) : hazard.severity;
+  const sevClass = `badge-sev-${hazard.severity || "minor"}`;
+
+  const sourceLabel = hazard.source === "simulated"
+    ? `(${window.i18n ? window.i18n.t("simulated_hit") : "simulated"})`
+    : `(${hazard.detectionMethod === "accel+gyro" ? "accel+gyro" : "accel-only"})`;
+
+  el.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:4px;">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span class="badge-type ${isSpeedBreaker ? 'badge-type-speedbreaker' : 'badge-type-pothole'}">${typeIcon} ${typeName}</span>
+        <span class="badge-severity ${sevClass}">${sevName} (${hazard.magnitude || IMPACT_THRESHOLD} m/s²)</span>
+        <span class="photo-indicator" data-local-id="${hazard._localId}"></span>
+      </div>
+      <span style="font-size:11px; color:var(--text-muted);">${sourceLabel}</span>
+    </div>
+    <span class="time">${time}</span>
+  `;
   logList.prepend(el);
 }
 
@@ -544,35 +836,163 @@ function listenForKnownHazards() {
   db.ref("hazards").on("child_added", (snapshot) => {
     const id = snapshot.key;
     const hazard = snapshot.val();
+    hazard.id = id;
     if (hazard.status === "flagged" || hazard.status === "repaired") return;
 
+    knownHazardsMap.set(id, hazard);
+
+    const isSpeedBreaker = hazard.hazardType === "speed_breaker";
+    const isSevere = hazard.severity === "severe";
+    const pinColor = isSevere ? "#ef4444" : isSpeedBreaker ? "#a855f7" : "#94a3b8";
+
     L.circleMarker([hazard.lat, hazard.lng], {
-      radius: 6,
-      color: "#94a3b8",
-      fillColor: "#64748b",
-      fillOpacity: 0.5,
+      radius: isSevere ? 7 : 5,
+      color: pinColor,
+      fillColor: isSevere ? "#ef4444" : isSpeedBreaker ? "#a855f7" : "#64748b",
+      fillOpacity: 0.6,
       weight: 1,
     }).addTo(map);
 
-    setInterval(() => {
+    setInterval(async () => {
       if (!currentPos || alertedHazardIds.has(id)) return;
       const dist = haversineMeters(currentPos.lat, currentPos.lng, hazard.lat, hazard.lng);
       if (dist < ALERT_RADIUS_METERS) {
         alertedHazardIds.add(id);
+
+        // Play pre-alert audio chime (0.5s pause before voice)
+        await playPreAlertChime(hazard.severity || "minor");
+
         if (window.i18n) {
-          window.i18n.speak("voice_ahead");
+          if (hazard.severity === "severe") {
+            window.i18n.speak("voice_severe_ahead");
+          } else if (hazard.hazardType === "speed_breaker") {
+            window.i18n.speak("voice_speedbreaker_ahead");
+          } else {
+            window.i18n.speak("voice_pothole_ahead");
+          }
         }
       }
-    }, 3000);
+    }, 2500);
   });
 }
 
 // ---------------------------------------------------------------
-// Button Listeners
+// Cockpit HUD Mode Controller (Modification #5)
+// Ultra-High Contrast OLED Night View, Digital Speedometer, Proximity Radar
+// ---------------------------------------------------------------
+function openCockpitHud() {
+  if (!cockpitHudOverlay) return;
+  hudActive = true;
+  cockpitHudOverlay.style.display = "flex";
+  cockpitHudOverlay.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  updateCockpitHud();
+  if (!hudUpdateInterval) {
+    hudUpdateInterval = setInterval(updateCockpitHud, 800);
+  }
+}
+
+function closeCockpitHud() {
+  if (!cockpitHudOverlay) return;
+  hudActive = false;
+  cockpitHudOverlay.style.display = "none";
+  cockpitHudOverlay.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  if (hudUpdateInterval) {
+    clearInterval(hudUpdateInterval);
+    hudUpdateInterval = null;
+  }
+}
+
+function toggleCockpitHud() {
+  if (hudActive) closeCockpitHud();
+  else openCockpitHud();
+}
+
+function updateCockpitHud() {
+  if (!hudActive) return;
+
+  // 1. Update Speedometer & Speed Gate Pill
+  if (hudSpeedVal) {
+    hudSpeedVal.textContent = currentSpeedKmH;
+  }
+
+  // 2. Find Nearest Active Hazard from Known Hazards and Session Logs
+  const allActiveHazards = [];
+  knownHazardsMap.forEach((h) => {
+    if (h.status !== "flagged" && h.status !== "repaired") {
+      allActiveHazards.push(h);
+    }
+  });
+  sessionLogs.forEach((h) => {
+    if (h.status === "active") {
+      allActiveHazards.push(h);
+    }
+  });
+
+  let nearestDist = Infinity;
+  let nearestHazard = null;
+
+  if (currentPos && allActiveHazards.length > 0) {
+    for (const h of allActiveHazards) {
+      const d = haversineMeters(currentPos.lat, currentPos.lng, h.lat, h.lng);
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearestHazard = h;
+      }
+    }
+  }
+
+  // 3. Render Nearest Hazard Distance Radar Banner
+  if (hudRadarCard && hudRadarHeadline && hudRadarSub && hudRadarIcon) {
+    if (nearestHazard && nearestDist <= 300) {
+      const roundedDist = Math.max(5, Math.round(nearestDist / 5) * 5);
+      const isSpeedBreaker = nearestHazard.hazardType === "speed_breaker";
+      const isSevere = nearestHazard.severity === "severe";
+      const typeLabel = isSpeedBreaker
+        ? (window.i18n ? window.i18n.t("hazard_speed_breaker") : "Speed Breaker")
+        : (isSevere
+          ? (window.i18n ? window.i18n.t("severity_severe") : "Severe Crater")
+          : (window.i18n ? window.i18n.t("hazard_pothole") : "Pothole"));
+
+      hudRadarIcon.textContent = isSpeedBreaker ? "🛑" : "🕳️";
+      hudRadarHeadline.textContent = `${typeLabel.toUpperCase()} IN ${roundedDist}m`;
+
+      const sevText = nearestHazard.severity
+        ? `Impact: ${nearestHazard.severity.toUpperCase()} (${nearestHazard.magnitude || 24} m/s²)`
+        : "Approach with caution — slow down";
+      hudRadarSub.textContent = sevText;
+
+      hudRadarCard.classList.remove("clear", "warning", "severe");
+      if (isSevere || roundedDist <= 75) {
+        hudRadarCard.classList.add("severe");
+      } else {
+        hudRadarCard.classList.add("warning");
+      }
+    } else {
+      // Road Clear Ahead
+      hudRadarIcon.textContent = "🛡️";
+      hudRadarHeadline.textContent = window.i18n ? window.i18n.t("hud_road_clear") : "ROAD CLEAR AHEAD";
+      hudRadarSub.textContent = window.i18n ? window.i18n.t("hud_road_clear_sub") : "No hazards within 300 meters";
+      hudRadarCard.classList.remove("warning", "severe");
+      hudRadarCard.classList.add("clear");
+    }
+  }
+
+  if (hudSessionHazards) {
+    hudSessionHazards.textContent = sessionLogs.length;
+  }
+}
+
+// ---------------------------------------------------------------
+// Button Listeners & Keyboard Shortcuts
 // ---------------------------------------------------------------
 startBtn.addEventListener("click", async () => {
   startBtn.disabled = true;
   startBtn.textContent = window.i18n ? window.i18n.t("status_starting") : "Starting...";
+
+  // Warm up Web Audio API context on user gesture
+  getAudioContext();
 
   const granted = await requestMotionPermission();
   if (!granted) {
@@ -588,12 +1008,70 @@ startBtn.addEventListener("click", async () => {
 
   setStatus(true, "status_monitoring", "Monitoring live. Drive normally — hazards log automatically.");
   startBtn.textContent = window.i18n ? window.i18n.t("status_active") : "Monitoring Active";
-  simulateBtn.disabled = false;
+
+  // Enable all demo simulation buttons
+  if (simulateBtn) simulateBtn.disabled = false;
+  if (simulatePotholeMinorBtn) simulatePotholeMinorBtn.disabled = false;
+  if (simulatePotholeSevereBtn) simulatePotholeSevereBtn.disabled = false;
+  if (simulateSpeedBreakerBtn) simulateSpeedBreakerBtn.disabled = false;
 });
 
-// Demystified Simulate Hit (inside Demo & Test Tools panel)
-simulateBtn.addEventListener("click", () => {
-  handlePotholeDetected("simulated");
+// Simulation Handlers (Bypasses Speed Gate for indoor demonstration)
+if (simulatePotholeMinorBtn) {
+  simulatePotholeMinorBtn.addEventListener("click", () => {
+    handleHazardDetected("simulated", "pothole", 24.5);
+  });
+}
+
+if (simulatePotholeSevereBtn) {
+  simulatePotholeSevereBtn.addEventListener("click", () => {
+    handleHazardDetected("simulated", "pothole", 41.2);
+  });
+}
+
+if (simulateSpeedBreakerBtn) {
+  simulateSpeedBreakerBtn.addEventListener("click", () => {
+    handleHazardDetected("simulated", "speed_breaker", 31.8);
+  });
+}
+
+if (simulateBtn) {
+  simulateBtn.addEventListener("click", () => {
+    handleHazardDetected("simulated", "pothole", 26.0);
+  });
+}
+
+// Audio Chime Audition Buttons
+if (testChimeBtn) {
+  testChimeBtn.addEventListener("click", () => {
+    playPreAlertChime("moderate");
+  });
+}
+if (hudChimeTestBtn) {
+  hudChimeTestBtn.addEventListener("click", () => {
+    playPreAlertChime("severe");
+  });
+}
+
+// Cockpit HUD Toggle Listeners
+if (hudToggleBtn) {
+  hudToggleBtn.addEventListener("click", openCockpitHud);
+}
+if (hudLaunchBtn) {
+  hudLaunchBtn.addEventListener("click", openCockpitHud);
+}
+if (hudExitBtn) {
+  hudExitBtn.addEventListener("click", closeCockpitHud);
+}
+
+// Keyboard Shortcut: [H] toggles HUD, [Esc] exits HUD
+window.addEventListener("keydown", (e) => {
+  if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+  if (e.key === "h" || e.key === "H") {
+    toggleCockpitHud();
+  } else if (e.key === "Escape" && hudActive) {
+    closeCockpitHud();
+  }
 });
 
 // React to language switch dynamically
@@ -601,12 +1079,15 @@ document.addEventListener("safepath-lang-changed", () => {
   if (currentStatusKey) {
     setStatus(statusDot.classList.contains("live"), currentStatusKey, statusText.textContent);
   }
+  updateSpeedTelemetry(currentSpeedKmH);
   updateQueueBadge();
+  if (hudActive) updateCockpitHud();
 });
 
 // ---------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------
 initMap();
+updateSpeedTelemetry(0);
 updateQueueBadge();
 trySyncQueue();

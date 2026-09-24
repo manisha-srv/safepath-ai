@@ -99,7 +99,56 @@ const TRANSLATIONS = {
     badge_review: "Pending review",
     badge_repaired: "Repaired",
     signin_hint_actions: "Sign in above to flag or confirm repairs",
-    signin_hint_moderate: "Sign in above to moderate"
+    signin_hint_moderate: "Sign in above to moderate",
+
+    // Hazard Types & Severity
+    hazard_pothole: "Pothole",
+    hazard_speed_breaker: "Unmarked Speed Breaker",
+    severity_minor: "Minor Bump",
+    severity_moderate: "Moderate",
+    severity_severe: "Severe Crater",
+
+    // Speed Gate
+    speed_gate_armed: "Speed Gate: Armed (>15 km/h)",
+    speed_gate_gated: "Speed Gate: Gated (<15 km/h — filtering false jostles)",
+    speed_gate_ignored: "Jostle ignored: Vehicle speed below 15 km/h",
+    speed_gate_bypassed: "Simulated hit (Speed gate bypassed for testing)",
+
+    // Voice Alerts
+    voice_pothole_detected: "Caution. Pothole detected. Slow down.",
+    voice_speedbreaker_detected: "Caution. Unmarked speed breaker detected. Slow down.",
+    voice_severe_detected: "Danger! Severe road crater detected. Slow down immediately.",
+    voice_pothole_ahead: "Caution. Pothole ahead. Slow down.",
+    voice_speedbreaker_ahead: "Caution. Speed breaker ahead. Slow down.",
+    voice_severe_ahead: "Danger! Severe road crater ahead. Slow down immediately.",
+
+    // Cockpit HUD
+    hud_btn: "Cockpit HUD",
+    hud_title: "Cockpit HUD",
+    hud_exit: "Exit HUD",
+    hud_road_clear: "ROAD CLEAR AHEAD",
+    hud_road_clear_sub: "No hazards within 300 meters",
+    hud_distance_in: "{type} in {dist}m",
+    hud_session_hazards: "SESSION HAZARDS",
+    hud_sensor_status: "SENSOR STATUS",
+    hud_night_mode: "NIGHT VISION",
+
+    // Demo Tools
+    simulate_pothole_minor: "Simulate Pothole (Minor)",
+    simulate_pothole_severe: "Simulate Pothole (Severe Crater)",
+    simulate_speedbreaker: "Simulate Speed Breaker",
+    test_audio_chime: "Test Audio Chime",
+
+    // Dashboard Stats & Filters
+    stat_severe: "Severe Craters",
+    stat_speedbreakers: "Speed Breakers",
+    filter_all_types: "All Hazard Types",
+    filter_potholes: "Potholes Only",
+    filter_speedbreakers: "Speed Breakers Only",
+    filter_all_severities: "All Severities",
+    filter_severe: "Severe Craters (>36 m/s²)",
+    filter_moderate: "Moderate (28–36 m/s²)",
+    filter_minor: "Minor Bump (22–28 m/s²)"
   },
 
   hi: {
@@ -185,7 +234,56 @@ const TRANSLATIONS = {
     badge_review: "समीक्षाधीन",
     badge_repaired: "मरम्मत पूर्ण",
     signin_hint_actions: "पुष्टि या फ़्लैग करने हेतु ऊपर लॉगिन करें",
-    signin_hint_moderate: "समीक्षा करने हेतु ऊपर लॉगिन करें"
+    signin_hint_moderate: "समीक्षा करने हेतु ऊपर लॉगिन करें",
+
+    // Hazard Types & Severity
+    hazard_pothole: "गड्ढा",
+    hazard_speed_breaker: "अचिह्नित स्पीड ब्रेकर",
+    severity_minor: "हल्का झटका",
+    severity_moderate: "मध्यम",
+    severity_severe: "खतरनाक गड्ढा (Severe Crater)",
+
+    // Speed Gate
+    speed_gate_armed: "स्पीड गेट: सक्रिय (>15 किमी/घंटा)",
+    speed_gate_gated: "स्पीड गेट: निष्क्रिय (<15 किमी/घंटा — झूठे झटके फ़िल्टर)",
+    speed_gate_ignored: "झटका नजरअंदाज: गति 15 किमी/घंटा से कम है",
+    speed_gate_bypassed: "सिमुलेटेड (स्पीड गेट परीक्षण हेतु बायपास)",
+
+    // Voice Alerts
+    voice_pothole_detected: "सावधान! गड्ढा दर्ज हुआ। कृपया गति धीमी करें।",
+    voice_speedbreaker_detected: "सावधान! अचिह्नित स्पीड ब्रेकर दर्ज हुआ। गति धीमी करें।",
+    voice_severe_detected: "खतरा! बहुत गहरा खतरनाक गड्ढा दर्ज हुआ। तुरंत गति धीमी करें।",
+    voice_pothole_ahead: "सावधान! आगे गड्ढा है। गति धीमी करें।",
+    voice_speedbreaker_ahead: "सावधान! आगे स्पीड ब्रेकर है। गति धीमी करें।",
+    voice_severe_ahead: "खतरा! आगे बहुत गहरा गड्ढा है। तुरंत गति धीमी करें।",
+
+    // Cockpit HUD
+    hud_btn: "कॉकपिट HUD",
+    hud_title: "कॉकपिट HUD",
+    hud_exit: "HUD से बाहर निकलें",
+    hud_road_clear: "आगे रास्ता साफ है",
+    hud_road_clear_sub: "300 मीटर के दायरे में कोई खतरा नहीं",
+    hud_distance_in: "{dist}मी में {type}",
+    hud_session_hazards: "सत्र खतरे",
+    hud_sensor_status: "सेंसर स्थिति",
+    hud_night_mode: "नाइट विज़न",
+
+    // Demo Tools
+    simulate_pothole_minor: "गड्ढा सिमुलेट करें (हल्का)",
+    simulate_pothole_severe: "गड्ढा सिमुलेट करें (खतरनाक गड्ढा)",
+    simulate_speedbreaker: "स्पीड ब्रेकर सिमुलेट करें",
+    test_audio_chime: "ऑडियो चाइम टेस्ट करें",
+
+    // Dashboard Stats & Filters
+    stat_severe: "गंभीर गड्ढे",
+    stat_speedbreakers: "स्पीड ब्रेकर",
+    filter_all_types: "सभी प्रकार के खतरे",
+    filter_potholes: "केवल गड्ढे",
+    filter_speedbreakers: "केवल स्पीड ब्रेकर",
+    filter_all_severities: "सभी तीव्रता",
+    filter_severe: "खतरनाक गड्ढे (>36 m/s²)",
+    filter_moderate: "मध्यम (28–36 m/s²)",
+    filter_minor: "हल्का झटका (22–28 m/s²)"
   },
 
   ta: {
@@ -271,7 +369,56 @@ const TRANSLATIONS = {
     badge_review: "ஆய்வில் உள்ளது",
     badge_repaired: "சீரமைக்கப்பட்டது",
     signin_hint_actions: "செயல்பட மேலே உள்நுழைக",
-    signin_hint_moderate: "பரிசீலிக்க மேலே உள்நுழைக"
+    signin_hint_moderate: "பரிசீலிக்க மேலே உள்நுழைக",
+
+    // Hazard Types & Severity
+    hazard_pothole: "பள்ளம்",
+    hazard_speed_breaker: "குறியிடப்படாத வேகத்தடை",
+    severity_minor: "சிறிய அதிர்வு",
+    severity_moderate: "மிதமான",
+    severity_severe: "ஆபத்தான பெரும் பள்ளம்",
+
+    // Speed Gate
+    speed_gate_armed: "வேகக் கட்டுப்பாடு: செயலில் (>15 கிமீ/மணி)",
+    speed_gate_gated: "வேகக் கட்டுப்பாடு: தடுக்கப்பட்டது (<15 கிமீ/மணி — தவறான அதிர்வுகள் தவிர்க்கப்படும்)",
+    speed_gate_ignored: "அதிர்வு நிராகரிக்கப்பட்டது: வேகம் 15 கிமீ/மணிக்கு குறைவாக உள்ளது",
+    speed_gate_bypassed: "மாதிரி நிகழ்வு (சோதனைக்காக வேகம் புறக்கணிக்கப்பட்டது)",
+
+    // Voice Alerts
+    voice_pothole_detected: "எச்சரிக்கை! பள்ளம் கண்டறியப்பட்டது. வேகத்தை குறைக்கவும்.",
+    voice_speedbreaker_detected: "எச்சரிக்கை! குறியிடப்படாத வேகத்தடை கண்டறியப்பட்டது. வேகத்தை குறைக்கவும்.",
+    voice_severe_detected: "ஆபத்து! மிக மோசமான பெரும் பள்ளம். உடனே வேகத்தை குறைக்கவும்.",
+    voice_pothole_ahead: "எச்சரிக்கை! முன்னால் பள்ளம் உள்ளது. வேகத்தை குறைக்கவும்.",
+    voice_speedbreaker_ahead: "எச்சரிக்கை! முன்னால் வேகத்தடை உள்ளது. மெதுவாக செல்லவும்.",
+    voice_severe_ahead: "ஆபத்து! முன்னால் பெரும் பள்ளம் உள்ளது. உடனே வேகத்தை குறைக்கவும்.",
+
+    // Cockpit HUD
+    hud_btn: "காக்பிட் HUD",
+    hud_title: "காக்பிட் HUD",
+    hud_exit: "HUD வெளியேறு",
+    hud_road_clear: "முன்னால் சாலை தெளிவாக உள்ளது",
+    hud_road_clear_sub: "300 மீட்டருக்குள் ஆபத்துகள் இல்லை",
+    hud_distance_in: "{dist}மீட்டரில் {type}",
+    hud_session_hazards: "பதிவானவை",
+    hud_sensor_status: "சென்சார் நிலை",
+    hud_night_mode: "இரவு பார்வை",
+
+    // Demo Tools
+    simulate_pothole_minor: "பள்ளம் இயக்கு (சிறிய)",
+    simulate_pothole_severe: "பள்ளம் இயக்கு (ஆபத்தான பள்ளம்)",
+    simulate_speedbreaker: "வேகத்தடை இயக்கு",
+    test_audio_chime: "எச்சரிக்கை ஒலி சோதனை",
+
+    // Dashboard Stats & Filters
+    stat_severe: "ஆபத்தான பள்ளங்கள்",
+    stat_speedbreakers: "வேகத்தடைகள்",
+    filter_all_types: "அனைத்து வகைகள்",
+    filter_potholes: "பள்ளங்கள் மட்டும்",
+    filter_speedbreakers: "வேகத்தடைகள் மட்டும்",
+    filter_all_severities: "அனைத்து நிலைகள்",
+    filter_severe: "ஆபத்தான பள்ளங்கள் (>36 m/s²)",
+    filter_moderate: "மிதமான (28–36 m/s²)",
+    filter_minor: "சிறிய அதிர்வு (22–28 m/s²)"
   },
 
   te: {
@@ -357,7 +504,56 @@ const TRANSLATIONS = {
     badge_review: "సమీక్షలో ఉంది",
     badge_repaired: "మరమ్మతు చేయబడింది",
     signin_hint_actions: "చర్య తీసుకోవడానికి లాగిన్ అవ్వండి",
-    signin_hint_moderate: "సమీక్షించడానికి లాగిన్ అవ్వండి"
+    signin_hint_moderate: "సమీక్షించడానికి లాగిన్ అవ్వండి",
+
+    // Hazard Types & Severity
+    hazard_pothole: "గుంత",
+    hazard_speed_breaker: "గుర్తులేని స్పీడ్ బ్రేకర్",
+    severity_minor: "చిన్న కుదుపు",
+    severity_moderate: "మధ్యస్థ",
+    severity_severe: "తీవ్రమైన ప్రమాదకర గుంత",
+
+    // Speed Gate
+    speed_gate_armed: "స్పీడ్ గేట్: సక్రియం (>15 కిమీ/గం)",
+    speed_gate_gated: "స్పీడ్ గేట్: పరిమితం (<15 కిమీ/గం — తప్పుడు కుదుపులు ఫిల్టర్ చేయబడతాయి)",
+    speed_gate_ignored: "కుదుపు విస్మరించబడింది: వేగం 15 కిమీ/గం కంటే తక్కువ",
+    speed_gate_bypassed: "సిమ్యులేట్ చేయబడింది (టెస్టింగ్ కోసం స్పీడ్ గేట్ బైపాస్)",
+
+    // Voice Alerts
+    voice_pothole_detected: "హెచ్చరిక! రోడ్డుపై గుంత గుర్తించబడింది. వేగం తగ్గించండి.",
+    voice_speedbreaker_detected: "హెచ్చరిక! గుర్తులేని స్పీడ్ బ్రేకర్ గుర్తించబడింది. వేగం తగ్గించండి.",
+    voice_severe_detected: "ప్రమాదం! అత్యంత తీవ్రమైన గుంత గుర్తించబడింది. వెంటనే వేగం తగ్గించండి.",
+    voice_pothole_ahead: "హెచ్చరిక! ముందుకు గుంత ఉంది. వేగం తగ్గించండి.",
+    voice_speedbreaker_ahead: "హెచ్చరిక! ముందుకు స్పీడ్ బ్రేకర్ ఉంది. నెమ్మదిగా వెళ్లండి.",
+    voice_severe_ahead: "ప్రమాదం! ముందుకు ప్రమాదకర గుంత ఉంది. వెంటనే వేగం తగ్గించండి.",
+
+    // Cockpit HUD
+    hud_btn: "కాక్‌పిట్ HUD",
+    hud_title: "కాక్‌పిట్ HUD",
+    hud_exit: "HUD నిష్క్రమించు",
+    hud_road_clear: "ముందు దారి స్పష్టంగా ఉంది",
+    hud_road_clear_sub: "300 మీటర్లలోపు ఎలాంటి అడ్డంకులు లేవు",
+    hud_distance_in: "{dist} మీటర్లలో {type}",
+    hud_session_hazards: "నమోదైనవి",
+    hud_sensor_status: "సెన్సార్ స్థితి",
+    hud_night_mode: "నైట్ విజన్",
+
+    // Demo Tools
+    simulate_pothole_minor: "గుంత అనుకరణ (చిన్నది)",
+    simulate_pothole_severe: "గుంత అనుకరణ (తీవ్రమైన గుంత)",
+    simulate_speedbreaker: "స్పీడ్ బ్రేకర్ అనుకరణ",
+    test_audio_chime: "హెచ్చరిక శబ్దం పరీక్షించండి",
+
+    // Dashboard Stats & Filters
+    stat_severe: "తీవ్రమైన గుంతలు",
+    stat_speedbreakers: "స్పీడ్ బ్రేకర్లు",
+    filter_all_types: "అన్ని రకాల ప్రమాదాలు",
+    filter_potholes: "గుంతలు మాత్రమే",
+    filter_speedbreakers: "స్పీడ్ బ్రేకర్లు మాత్రమే",
+    filter_all_severities: "అన్ని తీవ్రతలు",
+    filter_severe: "తీవ్రమైన గుంతలు (>36 m/s²)",
+    filter_moderate: "మధ్యస్థ (28–36 m/s²)",
+    filter_minor: "చిన్న కుదుపు (22–28 m/s²)"
   },
 
   kn: {
@@ -443,7 +639,56 @@ const TRANSLATIONS = {
     badge_review: "ಪರಿಶೀಲನೆಯಲ್ಲಿದೆ",
     badge_repaired: "ದುರಸ್ತಿಗೊಂಡಿದೆ",
     signin_hint_actions: "ಕ್ರಮ ಕೈಗೊಳ್ಳಲು ಲಾಗಿನ್ ಆಗಿ",
-    signin_hint_moderate: "ಪರಿಶೀಲಿಸಲು ಲಾಗಿನ್ ಆಗಿ"
+    signin_hint_moderate: "ಪರಿಶೀಲಿಸಲು ಲಾಗಿನ್ ಆಗಿ",
+
+    // Hazard Types & Severity
+    hazard_pothole: "ರಸ್ತೆ ಗುಂಡಿ",
+    hazard_speed_breaker: "ಗುರುತಿಸದ ಸ್ಪೀಡ್ ಬ್ರೇಕರ್",
+    severity_minor: "ಸಣ್ಣ ಆಘಾತ",
+    severity_moderate: "ಮಧ್ಯಮ",
+    severity_severe: "ಅಪಾಯಕಾರಿ ದೊಡ್ಡ ಗುಂಡಿ",
+
+    // Speed Gate
+    speed_gate_armed: "ಸ್ಪೀಡ್ ಗೇಟ್: ಸಕ್ರಿಯ (>15 ಕಿಮೀ/ಗಂ)",
+    speed_gate_gated: "ಸ್ಪೀಡ್ ಗೇಟ್: ತಡೆಹಿಡಿಯಲಾಗಿದೆ (<15 ಕಿಮೀ/ಗಂ — ತಪ್ಪು ಆಘಾತಗಳು ನಿರ್ಲಕ್ಷಿಸಲ್ಪಡುತ್ತವೆ)",
+    speed_gate_ignored: "ಆಘಾತ ನಿರ್ಲಕ್ಷಿಸಲಾಗಿದೆ: ವೇಗ 15 ಕಿಮೀ/ಗಂಟೆಗಿಂತ ಕಡಿಮೆ",
+    speed_gate_bypassed: "ಸಿಮ್ಯುಲೇಟ್ ಮಾಡಲಾಗಿದೆ (ಪರೀಕ್ಷೆಗಾಗಿ ಸ್ಪೀಡ್ ಗೇಟ್ ಬೈಪಾಸ್)",
+
+    // Voice Alerts
+    voice_pothole_detected: "ಎಚ್ಚರಿಕೆ! ರಸ್ತೆ ಗುಂಡಿ ಪತ್ತೆಯಾಗಿದೆ. ವೇಗ ಕಡಿಮೆ ಮಾಡಿ.",
+    voice_speedbreaker_detected: "ಎಚ್ಚರಿಕೆ! ಗುರುತಿಸದ ಸ್ಪೀಡ್ ಬ್ರೇಕರ್ ಪತ್ತೆಯಾಗಿದೆ. ವೇಗ ಕಡಿಮೆ ಮಾಡಿ.",
+    voice_severe_detected: "ಅಪಾಯ! ಅತಿ ದೊಡ್ಡ ಅಪಾಯಕಾರಿ ಗುಂಡಿ ಪತ್ತೆಯಾಗಿದೆ. ತಕ್ಷಣ ವೇಗ ಕಡಿಮೆ ಮಾಡಿ.",
+    voice_pothole_ahead: "ಎಚ್ಚರಿಕೆ! ಮುಂದೆ ರಸ್ತೆ ಗುಂಡಿ ಇದೆ. ವೇಗ ಕಡಿಮೆ ಮಾಡಿ.",
+    voice_speedbreaker_ahead: "ಎಚ್ಚರಿಕೆ! ಮುಂದೆ ಸ್ಪೀಡ್ ಬ್ರೇಕರ್ ಇದೆ. ವೇಗ ಕಡಿಮೆ ಮಾಡಿ.",
+    voice_severe_ahead: "ಅಪಾಯ! ಮುಂದೆ ದೊಡ್ಡ ಗುಂಡಿ ಇದೆ. ತಕ್ಷಣ ವೇಗ ಕಡಿಮೆ ಮಾಡಿ.",
+
+    // Cockpit HUD
+    hud_btn: "ಕಾಕ್‌ಪಿಟ್ HUD",
+    hud_title: "ಕಾಕ್‌ಪಿಟ್ HUD",
+    hud_exit: "HUD ನಿರ್ಗಮಿಸಿ",
+    hud_road_clear: "ಮುಂದಿನ ರಸ್ತೆ ಸ್ಪಷ್ಟವಾಗಿದೆ",
+    hud_road_clear_sub: "300 ಮೀಟರ್ ವ್ಯಾಪ್ತಿಯಲ್ಲಿ ಯಾವುದೇ ಹಾನಿ ಇಲ್ಲ",
+    hud_distance_in: "{dist} ಮೀಟರ್‌ನಲ್ಲಿ {type}",
+    hud_session_hazards: "ದಾಖಲಾದವು",
+    hud_sensor_status: "ಸಂವೇದಕ ಸ್ಥಿತಿ",
+    hud_night_mode: "ನೈಟ್ ವಿಷನ್",
+
+    // Demo Tools
+    simulate_pothole_minor: "ಗುಂಡಿ ಸಿಮ್ಯುಲೇಟ್ (ಸಣ್ಣ)",
+    simulate_pothole_severe: "ಗುಂಡಿ ಸಿಮ್ಯುಲೇಟ್ (ದೊಡ್ಡ ಗುಂಡಿ)",
+    simulate_speedbreaker: "ಸ್ಪೀಡ್ ಬ್ರೇಕರ್ ಸಿಮ್ಯುಲೇಟ್",
+    test_audio_chime: "ಎಚ್ಚರಿಕೆ ಶಬ್ದ ಪರೀಕ್ಷಿಸಿ",
+
+    // Dashboard Stats & Filters
+    stat_severe: "ಅಪಾಯಕಾರಿ ಗುಂಡಿಗಳು",
+    stat_speedbreakers: "ಸ್ಪೀಡ್ ಬ್ರೇಕರ್‌ಗಳು",
+    filter_all_types: "ಎಲ್ಲಾ ರೀತಿಯ ಹಾನಿಗಳು",
+    filter_potholes: "ಗುಂಡಿಗಳು ಮಾತ್ರ",
+    filter_speedbreakers: "ಸ್ಪೀಡ್ ಬ್ರೇಕರ್‌ಗಳು ಮಾತ್ರ",
+    filter_all_severities: "ಎಲ್ಲಾ ತೀವ್ರತೆಗಳು",
+    filter_severe: "ಅಪಾಯಕಾರಿ ಗುಂಡಿಗಳು (>36 m/s²)",
+    filter_moderate: "ಮಧ್ಯಮ (28–36 m/s²)",
+    filter_minor: "ಸಣ್ಣ ಆಘಾತ (22–28 m/s²)"
   }
 };
 
@@ -519,9 +764,9 @@ class I18nManager {
     }
   }
 
-  speak(key) {
+  speak(key, params = {}) {
     if (!("speechSynthesis" in window)) return;
-    const text = this.t(key);
+    const text = this.t(key, params);
     if (!text) return;
 
     try {

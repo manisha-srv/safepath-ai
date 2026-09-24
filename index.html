@@ -31,6 +31,10 @@
       <span class="theme-icon">☀️</span>
       <span class="theme-label" data-i18n="theme_daylight">Daylight</span>
     </button>
+    <button class="hud-toggle-btn" id="hudToggleBtn" aria-label="Toggle Cockpit HUD">
+      <span class="hud-icon">🚀</span>
+      <span class="hud-label" data-i18n="hud_btn">Cockpit HUD</span>
+    </button>
   </div>
 </header>
 
@@ -56,9 +60,19 @@
 <main class="app-layout">
   <!-- Left Column: Primary Driver HUD & Real-Time Sensors -->
   <div class="column main-column">
-    <div class="status-card">
-      <div class="status-dot" id="statusDot"></div>
-      <div class="status-text" id="statusText" data-i18n="status_not_started">Sensors not started yet. Tap "Start Monitoring" below.</div>
+    <!-- Live Telemetry: Status & Speed Gate Monitoring -->
+    <div class="telemetry-bar">
+      <div class="status-card">
+        <div class="status-dot" id="statusDot"></div>
+        <div class="status-text" id="statusText" data-i18n="status_not_started">Sensors not started yet. Tap "Start Monitoring" below.</div>
+      </div>
+      <div class="speed-gate-card" id="speedGateCard">
+        <div class="speed-readout">
+          <span class="speed-num" id="currentSpeedDisplay">0</span>
+          <span class="speed-unit">KM/H</span>
+        </div>
+        <div class="speed-gate-pill gated" id="speedGateIndicator" data-i18n="speed_gate_gated">Speed Gate: Gated (&lt;15 km/h)</div>
+      </div>
     </div>
 
     <div class="queue-badge" id="queueBadge" style="display:none;"></div>
@@ -67,9 +81,10 @@
 
     <div class="btn-row">
       <button class="primary" id="startBtn" data-i18n="start_monitoring_btn">Start Monitoring</button>
+      <button class="secondary" id="hudLaunchBtn"><span class="hud-icon">🚀</span> <span data-i18n="hud_btn">Cockpit HUD</span></button>
     </div>
 
-    <!-- Demystified "Simulate Hit" & Cleaner Driver HUD -->
+    <!-- Demystified Indian Road Simulation Panel -->
     <details class="demo-panel">
       <summary>
         <div class="demo-summary-content">
@@ -79,9 +94,14 @@
       </summary>
       <div class="demo-body">
         <p class="demo-note" data-i18n="demo_tools_note">
-          Automatic Detection Active: Potholes and road damage are detected 100% automatically using motion & gyroscope sensors while driving. This simulation button is intended strictly for indoor demonstrations and QA testing without a moving vehicle.
+          Automatic Detection Active: Potholes and unmarked speed breakers are detected 100% automatically using motion & gyroscope sensors while driving (>15 km/h). These simulation buttons bypass the GPS speed gate for indoor testing and QA.
         </p>
-        <button class="secondary" id="simulateBtn" data-i18n="simulate_btn" disabled>Simulate Pothole Hit</button>
+        <div class="demo-btn-grid">
+          <button class="secondary mini-btn" id="simulatePotholeMinorBtn" data-i18n="simulate_pothole_minor" disabled>Simulate Pothole (Minor)</button>
+          <button class="secondary mini-btn danger-tone" id="simulatePotholeSevereBtn" data-i18n="simulate_pothole_severe" disabled>Simulate Pothole (Severe Crater)</button>
+          <button class="secondary mini-btn warning-tone" id="simulateSpeedBreakerBtn" data-i18n="simulate_speedbreaker" disabled>Simulate Speed Breaker</button>
+          <button class="secondary mini-btn ghost" id="testChimeBtn" data-i18n="test_audio_chime">Test Audio Chime</button>
+        </div>
       </div>
     </details>
 
@@ -124,6 +144,68 @@
     </div>
   </div>
 </main>
+
+<!-- ============================================================
+     Cockpit HUD Mode (Ultra-High Contrast OLED Night View)
+     Zero Glare, Pure Black Background, Giant Speedometer,
+     Real-Time Distance Radar to Nearest Hazard
+     ============================================================ -->
+<div class="cockpit-hud-overlay" id="cockpitHudOverlay" style="display:none;" aria-hidden="true">
+  <div class="hud-container">
+    <div class="hud-header">
+      <div class="hud-brand-group">
+        <span class="hud-dot-pulse"></span>
+        <span class="hud-brand-title">SafePath AI</span>
+        <span class="hud-pill" data-i18n="hud_title">Cockpit HUD</span>
+      </div>
+      <div class="hud-header-actions">
+        <button class="hud-icon-btn" id="hudChimeTestBtn" title="Test Chime">🔔</button>
+        <button class="hud-exit-btn" id="hudExitBtn">
+          <span class="hud-exit-icon">✕</span>
+          <span data-i18n="hud_exit">Exit HUD</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="hud-main-display">
+      <!-- Digital Speedometer & Speed Gate Pill -->
+      <div class="hud-speedometer-box">
+        <div class="hud-speed-gauge">
+          <div class="hud-speed-val" id="hudSpeedVal">0</div>
+          <div class="hud-speed-lbl">KM/H</div>
+        </div>
+        <div class="hud-speed-gate-badge gated" id="hudSpeedGateBadge" data-i18n="speed_gate_gated">
+          Speed Gate: Gated (&lt;15 km/h — filtering false jostles)
+        </div>
+      </div>
+
+      <!-- Nearest Hazard Radar Banner -->
+      <div class="hud-radar-card clear" id="hudRadarCard">
+        <div class="hud-radar-icon" id="hudRadarIcon">🛡️</div>
+        <div class="hud-radar-content">
+          <div class="hud-radar-headline" id="hudRadarHeadline" data-i18n="hud_road_clear">ROAD CLEAR AHEAD</div>
+          <div class="hud-radar-sub" id="hudRadarSub" data-i18n="hud_road_clear_sub">No hazards within 300 meters</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HUD Bottom Telemetry Bar -->
+    <div class="hud-footer">
+      <div class="hud-metric">
+        <span class="hud-metric-label" data-i18n="hud_session_hazards">SESSION HAZARDS</span>
+        <span class="hud-metric-value" id="hudSessionHazards">0</span>
+      </div>
+      <div class="hud-metric">
+        <span class="hud-metric-label" data-i18n="hud_sensor_status">SENSOR STATUS</span>
+        <span class="hud-metric-value hud-status-text" id="hudSensorState">STANDBY</span>
+      </div>
+      <div class="hud-metric">
+        <span class="hud-metric-label">SHORTCUT</span>
+        <span class="hud-metric-value">Press [H] to Exit</span>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>

@@ -258,5 +258,40 @@ visible in the session log.
   the phone's browser, using the same sensors a native app would use, with
   zero install friction for a hackathon demo.
 - The accelerometer threshold (`IMPACT_THRESHOLD` in `js/app.js`) is tuned
-  for demo reliability; a production version would combine it with speed
+  for demo reliability; a production version combines it with speed
   and gyroscope data to filter out false positives (sharp turns, phone drops).
+
+---
+
+## 🇮🇳 Real Indian Road Conditions Tailored Modifications
+
+SafePath AI includes 5 top modifications engineered specifically for everyday Indian commutes and road conditions:
+
+1. **Distinguish Between "Pothole" and "Unmarked Speed Breaker"**
+   - **Indian Context:** Unmarked, illegal speed breakers (or table-top bumps without white stripes) cause just as many vehicle damages, scrapes, and accidents as potholes.
+   - **Waveform Analysis:**
+     - *Pothole:* Instant negative drop (-Z axis) followed by a violent upward hit (+Z axis).
+     - *Speed Breaker:* Upward heave (+Z axis) followed by suspension compression (-Z axis).
+   - Automatically categorizes detections as **"Pothole" (🕳️)** or **"Unmarked Speed Breaker" (🛑)** with distinct visual pins and spoken multilingual voice warnings.
+
+2. **Speed-Gated Detection (Eliminating False Positives)**
+   - **Problem Solved:** Picking up phone from cupholder, dropping it on passenger seats, or walking while "Monitoring" is on registered as false hits.
+   - **The Fix:** Requires GPS speed **> 15 km/h** before logging accelerometer hits. If stationary or walking, jostles are safely ignored with live status telemetry feedback (`Speed Gate: Gated (<15 km/h)`). Demo testing tools bypass the speed gate for indoor evaluation.
+
+3. **Hazard Severity Rating (Minor vs. Dangerous Crater)**
+   - Impact force is categorized into 3 actionable tiers based on G-force acceleration:
+     - 🟡 **Minor Bump (Yellow):** 22–28 m/s²
+     - 🟠 **Moderate Pothole (Orange):** 28–36 m/s²
+     - 🔴 **Severe Crater (Red):** > 36 m/s² (triggers urgent warning to slow down immediately).
+   - Helps municipal authorities prioritize fixing severe road craters first via the City Dashboard filter.
+
+4. **Pre-Alert Audio Chime (Tone Before Voice)**
+   - Powered 100% offline by the browser's native **Web Audio API** (`AudioContext`).
+   - Generates a pleasant, non-startling two-tone harmonic warning chime (D5 587Hz → A5 880Hz, or urgent 3-tone chime for severe craters) playing **0.5s before** the spoken multilingual voice alert begins, giving drivers an immediate subconscious cue to pay attention.
+
+5. **Night / Cockpit HUD Mode**
+   - Designed for zero-glare night driving without visual distraction.
+   - Pure OLED Pitch Black (`#000000`) minimal interface displaying only:
+     - **Current Speed (km/h):** Giant digital speedometer with live speed-gate status.
+     - **Dynamic Proximity Radar:** Real-time distance countdown to nearest hazard (e.g., *"POTHOLE IN 60m"* or *"SPEED BREAKER IN 110m"*, pulsing red for severe craters).
+     - Toggled with the `🚀 Cockpit HUD` header button or keyboard shortcut **`H`**.

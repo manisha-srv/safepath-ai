@@ -5,11 +5,15 @@
 
 const totalCountEl = document.getElementById("totalCount");
 const todayCountEl = document.getElementById("todayCount");
+const severeCountEl = document.getElementById("severeCount");
 const reviewCountEl = document.getElementById("reviewCount");
 const hazardListEl = document.getElementById("hazardList");
 const reviewSection = document.getElementById("reviewSection");
 const reviewListEl = document.getElementById("reviewList");
 const reportedGallery = document.getElementById("reportedGallery");
+
+const filterTypeSelect = document.getElementById("filterTypeSelect");
+const filterSeveritySelect = document.getElementById("filterSeveritySelect");
 
 // Click-to-Zoom Modal Elements
 const photoModal = document.getElementById("photoModal");
@@ -30,6 +34,8 @@ const CONFIRMATIONS_TO_REPAIR = 2;
 
 let hazards = [];
 let boundsSet = false;
+let currentTypeFilter = "all";
+let currentSeverityFilter = "all";
 
 function isToday(timestamp) {
   const d = new Date(timestamp);
@@ -50,6 +56,10 @@ function openPhotoModal(hazard) {
   modalCoords.textContent = `${hazard.lat.toFixed(5)}, ${hazard.lng.toFixed(5)}`;
   modalTime.textContent = new Date(hazard.timestamp).toLocaleString();
 
+  const isSpeedBreaker = hazard.hazardType === "speed_breaker";
+  const typeText = isSpeedBreaker ? "Unmarked Speed Breaker" : "Pothole";
+  const sevText = hazard.severity ? hazard.severity.toUpperCase() : "STANDARD";
+
   const statusLabel =
     hazard.status === "flagged"
       ? (window.i18n ? window.i18n.t("badge_review") : "Pending review")
@@ -57,7 +67,7 @@ function openPhotoModal(hazard) {
       ? (window.i18n ? window.i18n.t("badge_repaired") : "Repaired")
       : (window.i18n ? window.i18n.t("badge_active") : "Active");
 
-  modalStatus.textContent = statusLabel;
+  modalStatus.textContent = `${statusLabel} • ${typeText} (${sevText})`;
   photoModal.classList.add("active");
 }
 
@@ -142,24 +152,52 @@ function statusBadge(h) {
   return `<span class="badge badge-active">${text}</span>`;
 }
 
+function hazardTypeBadge(h) {
+  const isSpeedBreaker = h.hazardType === "speed_breaker";
+  const icon = isSpeedBreaker ? "🛑" : "🕳️";
+  const key = isSpeedBreaker ? "hazard_speed_breaker" : "hazard_pothole";
+  const label = window.i18n ? window.i18n.t(key) : (isSpeedBreaker ? "Speed Breaker" : "Pothole");
+  const cls = isSpeedBreaker ? "badge-type-speedbreaker" : "badge-type-pothole";
+  return `<span class="badge-type ${cls}">${icon} ${label}</span>`;
+}
+
+function severityBadge(h) {
+  const sev = h.severity || "minor";
+  const key = `severity_${sev}`;
+  const label = window.i18n ? window.i18n.t(key) : sev;
+  const magText = h.magnitude ? ` (${h.magnitude} m/s²)` : "";
+  return `<span class="badge-severity badge-sev-${sev}">${label}${magText}</span>`;
+}
+
 // ---------------------------------------------------------------
 // Render Main Lists & Dedicated Photo Gallery
 // ---------------------------------------------------------------
 function render() {
   const activeAndRepaired = hazards.filter((h) => h.status !== "flagged");
   const pendingReview = hazards.filter((h) => h.status === "flagged");
+  const severeHazards = hazards.filter((h) => h.severity === "severe" && h.status !== "repaired");
 
   totalCountEl.textContent = hazards.length;
   todayCountEl.textContent = hazards.filter((h) => isToday(h.timestamp)).length;
+  if (severeCountEl) severeCountEl.textContent = severeHazards.length;
   reviewCountEl.textContent = pendingReview.length;
 
   const t = (k, p) => (window.i18n ? window.i18n.t(k, p) : k);
 
+  // Apply filters
+  let filteredHazards = activeAndRepaired;
+  if (currentTypeFilter !== "all") {
+    filteredHazards = filteredHazards.filter((h) => (h.hazardType || "pothole") === currentTypeFilter);
+  }
+  if (currentSeverityFilter !== "all") {
+    filteredHazards = filteredHazards.filter((h) => (h.severity || "minor") === currentSeverityFilter);
+  }
+
   // 1. Main list: active + repaired hazards
-  if (activeAndRepaired.length === 0) {
+  if (filteredHazards.length === 0) {
     hazardListEl.innerHTML = `<div class="empty-state">${t("no_hazards_dashboard")}</div>`;
   } else {
-    const sorted = [...activeAndRepaired].sort((a, b) => b.timestamp - a.timestamp);
+    const sorted = [...filteredHazards].sort((a, b) => b.timestamp - a.timestamp);
     hazardListEl.innerHTML = "";
     sorted.forEach((h) => {
       const el = document.createElement("div");
@@ -182,8 +220,12 @@ function render() {
 
       el.innerHTML = `
         <div class="hazard-row-main">
-          <span><strong>${h.lat.toFixed(5)}, ${h.lng.toFixed(5)}</strong></span>
-          ${statusBadge(h)}
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span><strong>${h.lat.toFixed(5)}, ${h.lng.toFixed(5)}</strong></span>
+            ${hazardTypeBadge(h)}
+            ${severityBadge(h)}
+            ${statusBadge(h)}
+          </div>
           <span class="time">${time}</span>
         </div>
         ${
@@ -300,19 +342,47 @@ document.addEventListener("click", (e) => {
 document.addEventListener("safepath-auth-changed", render);
 document.addEventListener("safepath-lang-changed", render);
 
+if (filterTypeSelect) {
+  filterTypeSelect.addEventListener("change", (e) => {
+    currentTypeFilter = e.target.value;
+    render();
+  });
+}
+if (filterSeveritySelect) {
+  filterSeveritySelect.addEventListener("change", (e) => {
+    currentSeverityFilter = e.target.value;
+    render();
+  });
+}
+
 function addMarker(hazard) {
   const repaired = hazard.status === "repaired";
+  const isSpeedBreaker = hazard.hazardType === "speed_breaker";
+  const isSevere = hazard.severity === "severe";
+
+  let markerColor = "#f59e0b"; // amber for pothole
+  if (repaired) markerColor = "#10b981";
+  else if (isSevere) markerColor = "#ef4444";
+  else if (isSpeedBreaker) markerColor = "#a855f7";
+
+  const typeLabel = isSpeedBreaker ? "Unmarked Speed Breaker" : (isSevere ? "Severe Crater" : "Pothole");
+  const sevLabel = (hazard.severity || "minor").toUpperCase();
+  const magText = hazard.magnitude ? ` • ${hazard.magnitude} m/s²` : "";
+
   L.circleMarker([hazard.lat, hazard.lng], {
-    radius: repaired ? 6 : 8,
+    radius: isSevere ? 10 : (repaired ? 6 : 8),
     color: "#090d16",
-    fillColor: repaired ? "#10b981" : "#f59e0b",
+    fillColor: markerColor,
     fillOpacity: repaired ? 0.6 : 0.95,
     weight: 2,
   })
     .addTo(map)
     .bindPopup(
-      `<strong>${repaired ? "Repaired — " : ""}Reported: ${new Date(hazard.timestamp).toLocaleString()}</strong>` +
-        (hazard.photo ? `<br><img src="${hazard.photo}" style="max-width:180px;border-radius:6px;margin-top:6px;cursor:pointer;" onclick="window.openPhotoModalById && window.openPhotoModalById('${hazard.id}')">` : "")
+      `<div style="font-family:inherit; min-width:160px;">
+        <strong style="color:${markerColor};">${typeLabel}</strong> (${sevLabel}${magText})<br>
+        <span style="font-size:11px; color:#94a3b8;">${new Date(hazard.timestamp).toLocaleString()}</span>
+        ${hazard.photo ? `<br><img src="${hazard.photo}" style="max-width:180px;border-radius:6px;margin-top:6px;cursor:pointer;" onclick="window.openPhotoModalById && window.openPhotoModalById('${hazard.id}')">` : ""}
+      </div>`
     );
 }
 
