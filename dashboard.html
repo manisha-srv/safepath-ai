@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SafePath AI — City Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <div>
+    <h1>SafePath AI</h1>
+    <div class="tag">CITY DASHBOARD</div>
+  </div>
+</header>
+
+<nav class="app-nav">
+  <a href="index.html">Driver App</a>
+  <a href="dashboard.html" class="active">City Dashboard</a>
+</nav>
+
+<div class="auth-card" id="authCard">
+  <div id="authSignedOutView" class="auth-row">
+    <input type="email" id="authEmail" placeholder="Email" autocomplete="email" />
+    <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password" />
+    <button class="mini" id="authSignInBtn">Log In</button>
+    <button class="mini ghost" id="authSignUpBtn">Sign Up</button>
+  </div>
+  <div id="authSignedInView" class="auth-row" style="display:none;">
+    <span>Signed in as <strong id="authUserEmail"></strong></span>
+    <button class="mini ghost" id="authSignOutBtn">Sign Out</button>
+  </div>
+  <div class="status-text" id="authStatus"></div>
+</div>
+
+<main>
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="num" id="totalCount">0</div>
+      <div class="label">Hazards Logged</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="todayCount">0</div>
+      <div class="label">Logged Today</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="reviewCount">0</div>
+      <div class="label">Pending Review</div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <div class="log-card" id="reviewSection" style="display:none; margin-bottom:14px;">
+    <h3>Flagged — Pending Review</h3>
+    <div id="reviewList"></div>
+  </div>
+
+  <div class="log-card">
+    <h3>All Reported Hazards</h3>
+    <div id="hazardList">
+      <div class="empty-state">No hazards reported yet.</div>
+    </div>
+  </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
+
+</body>
+</html>
