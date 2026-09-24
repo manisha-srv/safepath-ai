@@ -1324,59 +1324,50 @@ if (hamburgerBtn) hamburgerBtn.addEventListener("click", openSidebar);
 if (sidebarCloseBtn) sidebarCloseBtn.addEventListener("click", closeSidebar);
 if (sidebarBackdrop) sidebarBackdrop.addEventListener("click", closeSidebar);
 // ---------------------------------------------------------------
-// Slide-Up Bottom Sheet Drawer Management
-// (Photo Evidence & Session Hazards Log)
+// Slide Down & Quick Navigation to Bottom Sections
+// (Photo Evidence, Session Hazards Log, Simulation Tools)
 // ---------------------------------------------------------------
-const bottomSheetDrawer = document.getElementById("bottomSheetDrawer");
-const bottomSheetBackdrop = document.getElementById("bottomSheetBackdrop");
-const sheetTabPhotos = document.getElementById("sheetTabPhotos");
-const sheetTabHazards = document.getElementById("sheetTabHazards");
-const sheetContentPhotos = document.getElementById("sheetContentPhotos");
-const sheetContentHazards = document.getElementById("sheetContentHazards");
-const sheetCloseBtn = document.getElementById("sheetCloseBtn");
 const dockPhotoBtn = document.getElementById("dockPhotoBtn");
 const dockLogBtn = document.getElementById("dockLogBtn");
+const slideDownHint = document.getElementById("slideDownHint");
+const backToMapBtn = document.getElementById("backToMapBtn");
 
-function openBottomSheet(tab = "photos") {
-  if (bottomSheetDrawer) bottomSheetDrawer.classList.add("open");
-  if (bottomSheetBackdrop) bottomSheetBackdrop.style.display = "block";
-  switchSheetTab(tab);
-}
-
-function closeBottomSheet() {
-  if (bottomSheetDrawer) bottomSheetDrawer.classList.remove("open");
-  if (bottomSheetBackdrop) bottomSheetBackdrop.style.display = "none";
-}
-
-function switchSheetTab(tab) {
-  if (tab === "photos") {
-    if (sheetTabPhotos) sheetTabPhotos.classList.add("active");
-    if (sheetTabHazards) sheetTabHazards.classList.remove("active");
-    if (sheetContentPhotos) sheetContentPhotos.classList.add("active");
-    if (sheetContentHazards) sheetContentHazards.classList.remove("active");
-  } else {
-    if (sheetTabHazards) sheetTabHazards.classList.add("active");
-    if (sheetTabPhotos) sheetTabPhotos.classList.remove("active");
-    if (sheetContentHazards) sheetContentHazards.classList.add("active");
-    if (sheetContentPhotos) sheetContentPhotos.classList.remove("active");
+function scrollToSection(sectionId) {
+  const el = document.getElementById(sectionId);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }
 
-if (sheetTabPhotos) sheetTabPhotos.addEventListener("click", () => switchSheetTab("photos"));
-if (sheetTabHazards) sheetTabHazards.addEventListener("click", () => switchSheetTab("hazards"));
-if (sheetCloseBtn) sheetCloseBtn.addEventListener("click", closeBottomSheet);
-if (bottomSheetBackdrop) bottomSheetBackdrop.addEventListener("click", closeBottomSheet);
-
 if (dockPhotoBtn) {
-  dockPhotoBtn.addEventListener("click", () => openBottomSheet("photos"));
+  dockPhotoBtn.addEventListener("click", () => scrollToSection("photoEvidenceSection"));
 }
 if (dockLogBtn) {
-  dockLogBtn.addEventListener("click", () => openBottomSheet("hazards"));
+  dockLogBtn.addEventListener("click", () => scrollToSection("hazardsLogSection"));
+}
+if (slideDownHint) {
+  slideDownHint.addEventListener("click", (e) => {
+    e.preventDefault();
+    scrollToSection("bottomContent");
+  });
+}
+if (backToMapBtn) {
+  backToMapBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 }
 if (navLinkPhotoEvidence) {
   navLinkPhotoEvidence.addEventListener("click", () => {
     closeSidebar();
-    openBottomSheet("photos");
+    scrollToSection("photoEvidenceSection");
+  });
+}
+const navLinkDriver = document.getElementById("navLinkDriver");
+if (navLinkDriver) {
+  navLinkDriver.addEventListener("click", () => {
+    closeSidebar();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 }
 
@@ -1662,7 +1653,6 @@ window.addEventListener("keydown", (e) => {
   } else if (e.key === "Escape") {
     if (hudActive) closeCockpitHud();
     if (appSidebar && appSidebar.classList.contains("open")) closeSidebar();
-    if (bottomSheetDrawer && bottomSheetDrawer.classList.contains("open")) closeBottomSheet();
   }
 });
 

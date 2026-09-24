@@ -249,53 +249,83 @@
 
     <div class="queue-badge" id="queueBadge" style="display:none;"></div>
   </div>
+
+  <!-- Slide Down Hint Pill -->
+  <a href="#bottomContent" class="slide-down-hint-pill" id="slideDownHint">
+    <span>Slide down for Hazards & Photos</span>
+    <span class="arrow-bounce">↓</span>
+  </a>
 </div>
 
 <!-- ============================================================
-     Slide-Up Bottom Sheet for Photo Evidence & Session Hazards
-     Clean, uncluttered, accessible on-demand via dock or menu
+     Bottom Scrollable Content Area (Slide down from map to access)
      ============================================================ -->
-<div class="bottom-sheet-backdrop" id="bottomSheetBackdrop"></div>
-<div class="bottom-sheet-drawer" id="bottomSheetDrawer">
-  <div class="bottom-sheet-header">
-    <div class="bottom-sheet-handle"></div>
-    <div class="bottom-sheet-tabs">
-      <button class="sheet-tab-btn active" id="sheetTabPhotos" type="button">📸 Photo Evidence</button>
-      <button class="sheet-tab-btn" id="sheetTabHazards" type="button">⚠️ Hazards Log (<span id="sheetHazardsCount">0</span>)</button>
+<main class="driver-bottom-content" id="bottomContent">
+  <!-- Hazards Logged Section -->
+  <section class="card" id="hazardsLogSection">
+    <div class="driver-bottom-section-header">
+      <h3><span>⚠️</span> <span data-i18n="hazards_logged_session">Hazards Logged This Session</span></h3>
+      <span class="badge-active" id="sheetHazardsCount">0</span>
     </div>
-    <button class="sheet-close-btn" id="sheetCloseBtn" aria-label="Close sheet" type="button">&times;</button>
-  </div>
-  <div class="bottom-sheet-body">
-    <!-- Tab 1: Photo Evidence -->
-    <div class="sheet-tab-content active" id="sheetContentPhotos">
-      <div class="photo-dropzone" id="photoDropzone">
-        <input type="file" accept="image/*" capture="environment" id="photoInput" style="display:none;" />
-        <div class="dropzone-icon">📸</div>
-        <div class="dropzone-title" data-i18n="photo_dropzone_title">Snap / Upload Hazard Photo</div>
-        <div class="dropzone-desc" data-i18n="photo_dropzone_desc">Tap to snap with camera or drag & drop photo</div>
-        <div class="dropzone-hint" id="dropzoneHint" data-i18n="photo_dropzone_hint">Attaches to latest detected hazard</div>
-        <div class="privacy-shield">🛡️ <span data-i18n="photo_privacy_badge">AI Face-Blur Active</span></div>
-        <div class="privacy-explainer" data-i18n="photo_privacy_note">Civilian privacy protected: Faces are automatically blurred on-device with AI before upload.</div>
-      </div>
-      <div class="status-text" id="photoStatus" style="font-size:12px; margin-top:8px;"></div>
-      <img id="photoPreview" style="display:none; max-width:100%; border-radius:10px; margin-top:10px;" alt="Captured preview" />
-      <div style="margin-top:18px;">
-        <h4 data-i18n="session_stream_title" style="margin:0 0 10px 0; font-size:14px; font-weight:700;">Session Photo Stream</h4>
-        <div class="session-stream" id="sessionPhotoStream">
-          <div class="empty-state" data-i18n="session_stream_empty">No hazard photos captured in this session yet.</div>
-        </div>
-      </div>
+    <div id="logList">
+      <div class="empty-state" data-i18n="no_hazards_session">No hazards logged yet. Drive normally or test with simulator below.</div>
+    </div>
+  </section>
+
+  <!-- Photo Evidence & AI Privacy Section -->
+  <section class="card" id="photoEvidenceSection">
+    <div class="driver-bottom-section-header">
+      <h3><span>📸</span> <span data-i18n="photo_evidence_title">Photo Evidence & AI Stream</span></h3>
+      <span class="badge-verified">🛡️ AI Face-Blur Active</span>
     </div>
 
-    <!-- Tab 2: Session Hazards -->
-    <div class="sheet-tab-content" id="sheetContentHazards">
-      <h4 style="margin:0 0 10px 0; font-size:14px; font-weight:700;"><span data-i18n="hazards_logged_session">Hazards Logged This Session</span></h4>
-      <div id="logList">
-        <div class="empty-state" data-i18n="no_hazards_session">No hazards logged yet.</div>
+    <!-- Snap / Upload Dropzone -->
+    <div class="photo-dropzone" id="photoDropzone">
+      <input type="file" accept="image/*" capture="environment" id="photoInput" style="display:none;" />
+      <div class="dropzone-icon">📸</div>
+      <div class="dropzone-title" data-i18n="photo_dropzone_title">Snap / Upload Hazard Photo</div>
+      <div class="dropzone-desc" data-i18n="photo_dropzone_desc">Tap to snap with camera or drag & drop photo</div>
+      <div class="dropzone-hint" id="dropzoneHint" data-i18n="photo_dropzone_hint">Attaches to latest detected hazard</div>
+      <div class="privacy-shield">🛡️ <span data-i18n="photo_privacy_badge">AI Face-Blur Active</span></div>
+      <div class="privacy-explainer" data-i18n="photo_privacy_note">Civilian privacy protected: Faces are automatically blurred on-device with AI before upload.</div>
+    </div>
+    <div class="status-text" id="photoStatus" style="font-size:12px; margin-top:8px;"></div>
+    <img id="photoPreview" style="display:none; max-width:100%; border-radius:10px; margin-top:10px;" alt="Captured preview" />
+
+    <div style="margin-top:18px;">
+      <h4 data-i18n="session_stream_title" style="margin:0 0 10px 0; font-size:14px; font-weight:700;">Session Photo Stream</h4>
+      <div class="session-stream" id="sessionPhotoStream">
+        <div class="empty-state" data-i18n="session_stream_empty">No hazard photos captured in this session yet.</div>
       </div>
     </div>
-  </div>
-</div>
+  </section>
+
+  <!-- Testing & Simulation Tools Section -->
+  <section class="card" id="demoToolsSection">
+    <div class="driver-bottom-section-header">
+      <h3><span>🧪</span> <span data-i18n="demo_tools_title">Testing & Simulator Tools</span></h3>
+      <span class="demo-badge">Indoor QA</span>
+    </div>
+    <p class="demo-note" data-i18n="demo_tools_note" style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+      Simulation buttons bypass the 12 km/h GPS speed gate for indoor testing.
+    </p>
+    <div class="demo-btn-grid">
+      <button class="secondary mini-btn" id="simulatePotholeMinorBtn" data-i18n="simulate_pothole_minor">Simulate Pothole (Minor)</button>
+      <button class="secondary mini-btn danger-tone" id="simulatePotholeSevereBtn" data-i18n="simulate_pothole_severe">Simulate Crater (Severe)</button>
+      <button class="secondary mini-btn warning-tone" id="simulateSpeedBreakerBtn" data-i18n="simulate_speedbreaker">Simulate Speed Breaker</button>
+      <button class="secondary mini-btn cyan-tone" id="simulateNearbyVehicleBtn">🚗 Simulate Nearby (85m)</button>
+      <button class="secondary mini-btn ghost" id="testChimeBtn" data-i18n="test_audio_chime">Test Audio Chime</button>
+      <button class="secondary mini-btn" id="testHapticHazardBtn">📳 Test Hazard Pulses</button>
+      <button class="secondary mini-btn danger-tone" id="testHapticSevereBtn">📳 Test Severe Pulses</button>
+      <button class="secondary mini-btn cyan-tone" id="testHapticProximityBtn">📳 Test Proximity Buzz</button>
+    </div>
+  </section>
+
+  <!-- Back to Full Map Button -->
+  <a href="#" class="back-to-map-btn" id="backToMapBtn">
+    <span>↑ Back to Full Map</span>
+  </a>
+</main>
 
 <!-- ============================================================
      Cockpit HUD Mode (Ultra-High Contrast OLED Night View)

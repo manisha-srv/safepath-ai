@@ -2455,19 +2455,24 @@ button.mini.ghost:hover:not(:disabled) {
    Clean Map-First Driver App Viewport & Floating Controls
    ============================================================ */
 body.driver-app-body {
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   width: 100vw;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
   position: relative;
 }
 
-.driver-screen-wrapper {
-  position: absolute;
-  inset: 0;
+.driver-screen-wrapper,
+.map-hero-wrapper {
+  position: relative;
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 520px;
   overflow: hidden;
 }
 
@@ -2480,6 +2485,101 @@ body.driver-app-body {
   border-radius: 0;
   box-shadow: none;
   z-index: 1;
+}
+
+/* Slide Down Hint Pill */
+.slide-down-hint-pill {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 990;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(12, 20, 36, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.slide-down-hint-pill:hover {
+  color: var(--text-main);
+  background: rgba(12, 20, 36, 0.95);
+  border-color: var(--amber);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.arrow-bounce {
+  animation: arrowBounce 1.5s infinite;
+  display: inline-block;
+  font-weight: 900;
+}
+
+@keyframes arrowBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
+}
+
+/* Bottom Content Container Below Map */
+.driver-bottom-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 20px 80px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.driver-bottom-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.driver-bottom-section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.back-to-map-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  align-self: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--cyan-radar);
+  padding: 10px 22px;
+  border-radius: 24px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+
+.back-to-map-btn:hover {
+  background: var(--bg-card-elevated);
+  border-color: var(--cyan-radar);
+  box-shadow: 0 0 14px var(--cyan-radar-glow);
+  transform: translateY(-2px);
 }
 
 /* Floating Minimal Top Bar */
