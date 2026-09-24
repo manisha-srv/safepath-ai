@@ -103,11 +103,50 @@ nothing is lost, it just syncs later.
 |---|---|---|
 | Impact detection | Browser `devicemotion` API | Real accelerometer/gyroscope access, no app install |
 | Location | Browser `Geolocation` API | Real GPS, no extra hardware |
-| Voice alerts | Browser `SpeechSynthesis` API | Built-in, free, no library needed |
+| Multilingual Voice Alerts | Browser `SpeechSynthesis` API | Built-in, 5 Indian languages (EN, HI, TA, TE, KN) |
+| Multi-Language i18n | Custom Client i18n (`js/i18n.js`) | Instant toggle across 5 major Indian languages |
+| Themes | Automotive Slate Dark / Daylight (`js/theme.js`) | Obsidian night HUD & high-contrast daytime mode |
+| Privacy Face-Blurring | TensorFlow BlazeFace | On-device, fail-closed privacy protection |
 | Map | Leaflet.js + OpenStreetMap | Free, no API key, no billing account required |
 | Database | Firebase Realtime Database | Free tier, real-time sync between driver app and dashboard |
 | Accounts | Firebase Authentication (email/password) | Free tier, ties flags/repair confirmations to real accounts |
 | Hosting | GitHub Pages | Free static hosting, gives a public demo link |
+
+## 🌐 Complete Multi-Language System (`js/i18n.js`)
+
+Full client-side internationalization across 5 major Indian languages:
+- **English**
+- **Hindi (हिंदी)**
+- **Tamil (தமிழ்)**
+- **Telugu (తెలుగు)**
+- **Kannada (ಕನ್ನಡ)**
+
+**What gets translated:**
+- All page titles, navigation pills, status badges, buttons, and login forms.
+- Dynamic telemetry status (sensor calibration, GPS tracking, offline queue).
+- **Spoken Voice Speech Alerts:** Road damage warnings speak automatically in the selected language using the browser's native text-to-speech engine (e.g. Hindi: *"सावधान! सड़क खराब पाई गई है। कृपया गति धीमी करें।"*).
+- A globe icon (`🌐`) selector in the top header persists your choice across sessions via `localStorage`.
+
+## 🌓 Dark & Light Mode Theme Toggle (`js/theme.js` & `style.css`)
+
+- **Automotive Slate Dark Mode (Default):** Deep obsidian canvas (`#090d16`), elevated card surfaces (`#162032`), safety amber accents (`#f59e0b`), and an animated emerald radar pulse for live monitoring.
+- **Daylight Mode:** Crisp slate/white surface (`#ffffff` / `#f8fafc`) with high-contrast text designed for bright daytime driving.
+- Instant one-tap sun/moon switcher (`☀️` / `🌙`) in the header that remembers driver preference.
+
+## 📸 Dedicated Photo Evidence & Stream Column
+
+- **Driver App (`index.html`):**
+  - Dedicated right-hand column with a "Snap / Upload Photo" dropzone.
+  - Automatic on-device AI face-blurring with TensorFlow BlazeFace before upload.
+  - Real-time Session Photo Stream displaying thumbnails of captured road hazards with coordinates, timestamps, and privacy badges.
+- **City Dashboard (`dashboard.html`):**
+  - Dedicated Reported Photo Gallery column displaying photos submitted across city sectors alongside coordinates.
+  - Click-to-zoom modal preview for municipal engineers to inspect reported damage up close.
+
+## 🚗 Demystified "Simulate Hit" & Cleaner Driver HUD
+
+- Road damage and pothole detection is **100% automatic** using motion and gyroscope sensors while driving.
+- The simulation trigger is placed inside an optional, collapsible **"Demo & Test Tools"** panel with an explanatory note so everyday drivers aren't confused by it during live vehicle operation.
 
 ## Accounts (Firebase Authentication)
 

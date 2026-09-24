@@ -1,72 +1,126 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SafePath AI — Driver App</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="style.css" />
+<script src="js/theme.js"></script>
+<script src="js/i18n.js"></script>
 </head>
 <body>
 
 <header class="app-header">
-  <div>
-    <h1>SafePath AI</h1>
-    <div class="tag">DRIVER APP</div>
+  <div class="brand-block">
+    <h1 data-i18n="app_title">SafePath AI</h1>
+    <div class="tag" data-i18n="tag_driver">DRIVER APP</div>
+  </div>
+  <div class="header-controls">
+    <div class="lang-picker-wrapper">
+      <span class="lang-icon">🌐</span>
+      <select id="langSelector" class="lang-select" aria-label="Select Language">
+        <option value="en">English</option>
+        <option value="hi">हिंदी (Hindi)</option>
+        <option value="ta">தமிழ் (Tamil)</option>
+        <option value="te">తెలుగు (Telugu)</option>
+        <option value="kn">ಕನ್ನಡ (Kannada)</option>
+      </select>
+    </div>
+    <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle Theme">
+      <span class="theme-icon">☀️</span>
+      <span class="theme-label" data-i18n="theme_daylight">Daylight</span>
+    </button>
   </div>
 </header>
 
 <nav class="app-nav">
-  <a href="index.html" class="active">Driver App</a>
-  <a href="dashboard.html">City Dashboard</a>
+  <a href="index.html" class="active" data-i18n="nav_driver">Driver App</a>
+  <a href="dashboard.html" data-i18n="nav_dashboard">City Dashboard</a>
 </nav>
 
 <div class="auth-card" id="authCard">
   <div id="authSignedOutView" class="auth-row">
-    <input type="email" id="authEmail" placeholder="Email" autocomplete="email" />
-    <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password" />
-    <button class="mini" id="authSignInBtn">Log In</button>
-    <button class="mini ghost" id="authSignUpBtn">Sign Up</button>
+    <input type="email" id="authEmail" placeholder="Email" data-i18n-placeholder="auth_email_placeholder" autocomplete="email" />
+    <input type="password" id="authPassword" placeholder="Password" data-i18n-placeholder="auth_password_placeholder" autocomplete="current-password" />
+    <button class="mini" id="authSignInBtn" data-i18n="auth_login">Log In</button>
+    <button class="mini ghost" id="authSignUpBtn" data-i18n="auth_signup">Sign Up</button>
   </div>
   <div id="authSignedInView" class="auth-row" style="display:none;">
-    <span>Signed in as <strong id="authUserEmail"></strong></span>
-    <button class="mini ghost" id="authSignOutBtn">Sign Out</button>
+    <span><span data-i18n="auth_signed_in_as">Signed in as</span> <strong id="authUserEmail"></strong></span>
+    <button class="mini ghost" id="authSignOutBtn" data-i18n="auth_signout">Sign Out</button>
   </div>
   <div class="status-text" id="authStatus"></div>
 </div>
 
-<main>
-  <div class="status-card">
-    <div class="status-dot" id="statusDot"></div>
-    <div class="status-text" id="statusText">Sensors not started yet. Tap "Start Monitoring" below.</div>
-  </div>
+<main class="app-layout">
+  <!-- Left Column: Primary Driver HUD & Real-Time Sensors -->
+  <div class="column main-column">
+    <div class="status-card">
+      <div class="status-dot" id="statusDot"></div>
+      <div class="status-text" id="statusText" data-i18n="status_not_started">Sensors not started yet. Tap "Start Monitoring" below.</div>
+    </div>
 
-  <div class="queue-badge" id="queueBadge" style="display:none;"></div>
+    <div class="queue-badge" id="queueBadge" style="display:none;"></div>
 
-  <div id="map"></div>
+    <div id="map"></div>
 
-  <div class="btn-row">
-    <button class="primary" id="startBtn">Start Monitoring</button>
-    <button class="secondary" id="simulateBtn" disabled>Simulate Pothole Hit</button>
-  </div>
+    <div class="btn-row">
+      <button class="primary" id="startBtn" data-i18n="start_monitoring_btn">Start Monitoring</button>
+    </div>
 
-  <div class="log-card" id="photoCard" style="display:none; margin-bottom:14px;">
-    <h3>Add a Photo (Optional)</h3>
-    <p class="status-text" style="margin:0 0 10px 0;">
-      When it's safe, snap a photo of the last hazard — helps the city confirm what was reported.
-    </p>
-    <input type="file" accept="image/*" capture="environment" id="photoInput" />
-    <div class="status-text" id="photoStatus" style="margin-top:8px;"></div>
-    <img id="photoPreview" style="display:none; max-width:100%; border-radius:8px; margin-top:10px;" />
-    <div class="btn-row" style="margin-top:10px; margin-bottom:0;">
-      <button class="secondary" id="skipPhotoBtn">Skip</button>
+    <!-- Demystified "Simulate Hit" & Cleaner Driver HUD -->
+    <details class="demo-panel">
+      <summary>
+        <div class="demo-summary-content">
+          <span data-i18n="demo_tools_title">Demo & Test Tools</span>
+          <span class="demo-badge" data-i18n="demo_tools_badge">Indoor Testing Only</span>
+        </div>
+      </summary>
+      <div class="demo-body">
+        <p class="demo-note" data-i18n="demo_tools_note">
+          Automatic Detection Active: Potholes and road damage are detected 100% automatically using motion & gyroscope sensors while driving. This simulation button is intended strictly for indoor demonstrations and QA testing without a moving vehicle.
+        </p>
+        <button class="secondary" id="simulateBtn" data-i18n="simulate_btn" disabled>Simulate Pothole Hit</button>
+      </div>
+    </details>
+
+    <div class="card">
+      <h3><span data-i18n="hazards_logged_session">Hazards Logged This Session</span></h3>
+      <div id="logList">
+        <div class="empty-state" data-i18n="no_hazards_session">No hazards logged yet.</div>
+      </div>
     </div>
   </div>
 
-  <div class="log-card">
-    <h3>Hazards Logged This Session</h3>
-    <div id="logList">
-      <div class="empty-state">No hazards logged yet.</div>
+  <!-- Right Column: Dedicated Photo Evidence & Stream -->
+  <div class="column side-column photo-column-wrapper">
+    <div class="card">
+      <h3><span data-i18n="photo_evidence_title">Photo Evidence & Stream</span></h3>
+
+      <!-- Snap / Upload Dropzone with Automatic AI Face-Blurring -->
+      <div class="photo-dropzone" id="photoDropzone">
+        <input type="file" accept="image/*" capture="environment" id="photoInput" style="display:none;" />
+        <div class="dropzone-icon">📸</div>
+        <div class="dropzone-title" data-i18n="photo_dropzone_title">Snap / Upload Hazard Photo</div>
+        <div class="dropzone-desc" data-i18n="photo_dropzone_desc">Tap to snap with camera or drag & drop photo</div>
+        <div class="dropzone-hint" id="dropzoneHint" data-i18n="photo_dropzone_hint">Attaches to latest detected hazard</div>
+        <div class="privacy-shield">🛡️ <span data-i18n="photo_privacy_badge">AI Face-Blur Active</span></div>
+        <div class="privacy-explainer" data-i18n="photo_privacy_note">
+          Civilian privacy protected: Faces are automatically blurred on-device with AI before upload.
+        </div>
+      </div>
+
+      <div class="status-text" id="photoStatus" style="font-size:12px; margin-top:8px;"></div>
+      <img id="photoPreview" style="display:none; max-width:100%; border-radius:8px; margin-top:10px;" />
+    </div>
+
+    <!-- Real-time Session Photo Stream -->
+    <div class="card">
+      <h3><span data-i18n="session_stream_title">Session Photo Stream</span></h3>
+      <div class="session-stream" id="sessionPhotoStream">
+        <div class="empty-state" data-i18n="session_stream_empty">No hazard photos captured in this session yet.</div>
+      </div>
     </div>
   </div>
 </main>
