@@ -2,17 +2,20 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SafePath AI — Driver App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>SafePath AI — Smart Road Telemetry & Navigation</title>
 <link rel="icon" type="image/svg+xml" href="logo.svg" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="style.css" />
 <script src="js/theme.js"></script>
 <script src="js/i18n.js"></script>
 </head>
-<body>
+<body class="driver-app-body">
 
-<!-- Slide-out Sidebar Drawer & Backdrop -->
+<!-- ============================================================
+     Slide-out Sidebar Drawer & Backdrop
+     Contains: Navigation, 3-Way Alert System, Sound, Language, Theme, Stats
+     ============================================================ -->
 <div class="sidebar-backdrop" id="sidebarBackdrop" style="display:none;"></div>
 <aside class="app-sidebar" id="appSidebar" aria-label="Main Navigation Menu">
   <div class="sidebar-header">
@@ -27,7 +30,7 @@
   </div>
 
   <div class="sidebar-body">
-    <!-- User Profile Preview in Sidebar -->
+    <!-- User Profile Preview in Sidebar (Tapping opens Auth Modal) -->
     <div class="sidebar-user-card" id="sidebarUserCard" title="Tap to sign in or manage account">
       <div class="sidebar-user-avatar" id="sidebarUserAvatar">👤</div>
       <div class="sidebar-user-info">
@@ -42,16 +45,20 @@
       <a href="index.html" class="sidebar-link active" id="navLinkDriver">
         <span class="sidebar-icon">🚗</span>
         <span class="sidebar-link-text" data-i18n="nav_driver">Driver App</span>
-        <span class="sidebar-badge-live">LIVE</span>
+        <span class="sidebar-badge-live">MAP</span>
       </a>
       <a href="dashboard.html" class="sidebar-link" id="navLinkDashboard">
         <span class="sidebar-icon">📊</span>
         <span class="sidebar-link-text" data-i18n="nav_dashboard">City Dashboard</span>
       </a>
-      <a href="#photoDropzone" class="sidebar-link" id="navLinkPhotoEvidence">
+      <button class="sidebar-link sidebar-btn-link" id="navLinkPhotoEvidence" type="button">
         <span class="sidebar-icon">📸</span>
         <span class="sidebar-link-text" data-i18n="photo_evidence_title">Photo Evidence</span>
-      </a>
+      </button>
+      <button class="sidebar-link sidebar-btn-link" id="hudToggleBtn" type="button">
+        <span class="sidebar-icon">🚀</span>
+        <span class="sidebar-link-text" data-i18n="hud_btn">Cockpit HUD</span>
+      </button>
       <div class="sidebar-stat-chip">
         <span class="sidebar-icon">⚠️</span>
         <span class="sidebar-link-text" data-i18n="sidebar_total_hazards">Total Hazards</span>
@@ -62,21 +69,21 @@
     <!-- 3-Way Alert System in Sidebar -->
     <div class="sidebar-section-title">3-WAY ALERT PREFERENCE</div>
     <div class="sidebar-alert-modes">
-      <button class="alert-mode-btn active" data-mode="sound" id="sidebarModeSound">
+      <button class="alert-mode-btn active" data-mode="sound" id="sidebarModeSound" type="button">
         <span class="mode-icon">🔊</span>
         <div class="mode-details">
           <strong data-i18n="alert_mode_sound">Sound</strong>
           <span data-i18n="alert_mode_sound_desc">Voice alerts + Chime + Haptics</span>
         </div>
       </button>
-      <button class="alert-mode-btn" data-mode="vibrate" id="sidebarModeVibrate">
+      <button class="alert-mode-btn" data-mode="vibrate" id="sidebarModeVibrate" type="button">
         <span class="mode-icon">📳</span>
         <div class="mode-details">
           <strong data-i18n="alert_mode_vibrate">Vibrate</strong>
           <span data-i18n="alert_mode_vibrate_desc">Tactile physical pulses only (quiet)</span>
         </div>
       </button>
-      <button class="alert-mode-btn" data-mode="silent" id="sidebarModeSilent">
+      <button class="alert-mode-btn" data-mode="silent" id="sidebarModeSilent" type="button">
         <span class="mode-icon">🔇</span>
         <div class="mode-details">
           <strong data-i18n="alert_mode_silent">Silent</strong>
@@ -100,6 +107,16 @@
       </label>
     </div>
 
+    <!-- Hidden compatibility elements for app.js and auth.js sync -->
+    <div style="display:none;" aria-hidden="true">
+      <button id="alertModeBtn"><span id="alertModeIcon">🔊</span><span id="alertModeLabel">Sound</span></button>
+      <button id="vibrationToggleBtn"><span id="vibrationToggleIcon">📳</span><span id="vibrationToggleLabel">Haptics ON</span></button>
+      <button id="authSignInBtn"></button>
+      <button id="authSignUpBtn"></button>
+      <button id="simulateBtn"></button>
+      <select id="langSelector"></select>
+    </div>
+
     <!-- Language Selector in Sidebar -->
     <div class="sidebar-section-title">LANGUAGE SETTINGS</div>
     <div class="sidebar-lang-picker">
@@ -111,6 +128,15 @@
         <option value="te">తెలుగు (Telugu)</option>
         <option value="kn">ಕನ್ನಡ (Kannada)</option>
       </select>
+    </div>
+
+    <!-- Theme Toggle in Sidebar -->
+    <div class="sidebar-section-title">DISPLAY MODE</div>
+    <div style="margin-bottom: 12px;">
+      <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle Theme" style="width: 100%; justify-content: center; padding: 10px;" type="button">
+        <span class="theme-icon">☀️</span>
+        <span class="theme-label" data-i18n="theme_daylight">Daylight</span>
+      </button>
     </div>
 
     <!-- Live Telemetry Stats in Sidebar -->
@@ -133,150 +159,115 @@
         <div class="sidebar-stat-lbl">SPEED GATE (&lt;12)</div>
       </div>
     </div>
+
+    <!-- Collapsible Demo Tools in Sidebar -->
+    <div class="sidebar-section-title">TESTING & SIMULATION</div>
+    <details class="sidebar-demo-accordion">
+      <summary>🧪 Indoor Simulator Tools</summary>
+      <div class="demo-btn-grid" style="margin-top:10px;">
+        <button class="secondary mini-btn" id="simulatePotholeMinorBtn" data-i18n="simulate_pothole_minor">Simulate Pothole (Minor)</button>
+        <button class="secondary mini-btn danger-tone" id="simulatePotholeSevereBtn" data-i18n="simulate_pothole_severe">Simulate Crater (Severe)</button>
+        <button class="secondary mini-btn warning-tone" id="simulateSpeedBreakerBtn" data-i18n="simulate_speedbreaker">Simulate Speed Breaker</button>
+        <button class="secondary mini-btn cyan-tone" id="simulateNearbyVehicleBtn">🚗 Simulate Nearby (85m)</button>
+        <button class="secondary mini-btn ghost" id="testChimeBtn" data-i18n="test_audio_chime">Test Audio Chime</button>
+        <button class="secondary mini-btn" id="testHapticHazardBtn">📳 Test Hazard Pulses</button>
+        <button class="secondary mini-btn danger-tone" id="testHapticSevereBtn">📳 Test Severe Pulses</button>
+        <button class="secondary mini-btn cyan-tone" id="testHapticProximityBtn">📳 Test Proximity Buzz</button>
+      </div>
+    </details>
   </div>
 </aside>
 
-<!-- Top Navigation Header -->
-<header class="app-header">
-  <div class="header-left">
-    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open Navigation Drawer" title="Navigation, Controls & Stats">
+<!-- ============================================================
+     CLEAN MAP-FIRST VIEWPORT
+     The entire screen is the map, with floating top controls & bottom dock
+     ============================================================ -->
+<div class="driver-screen-wrapper">
+  <!-- Fullscreen Leaflet Map -->
+  <div id="map" class="fullscreen-map"></div>
+
+  <!-- Floating Minimal Top Bar -->
+  <header class="floating-top-bar">
+    <!-- Top-Left: Hamburger Icon Button (Opens slide drawer with navigation & settings) -->
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open Navigation Menu" title="Menu & Settings" type="button">
       <span class="hamburger-bar"></span>
       <span class="hamburger-bar"></span>
       <span class="hamburger-bar"></span>
     </button>
-    <div class="brand-block">
-      <img src="logo.svg" alt="SafePath AI Navigation Logo" class="app-logo-img" width="34" height="34" />
-      <div>
-        <h1 data-i18n="app_title">SafePath AI</h1>
-        <div class="tag" data-i18n="tag_driver">DRIVER APP</div>
-      </div>
-    </div>
-  </div>
 
-  <div class="header-controls">
-    <!-- 3-Way Alert System Mode Selector (Sound / Vibrate / Silent) -->
-    <button class="alert-toggle-btn mode-sound" id="alertModeBtn" aria-label="Alert Mode" title="3-Way Alert: Sound, Vibrate, Silent">
-      <span class="alert-icon" id="alertModeIcon">🔊</span>
-      <span class="alert-mode-label" id="alertModeLabel">Sound</span>
-    </button>
-
-    <!-- Quick Vibration Toggle Button -->
-    <button class="haptic-toggle-btn" id="vibrationToggleBtn" aria-label="Toggle Vibration" title="Vibration Haptics (On/Off)">
-      <span class="haptic-icon" id="vibrationToggleIcon">📳</span>
-      <span class="haptic-label" id="vibrationToggleLabel">Haptics ON</span>
-    </button>
-
-    <!-- Language Selector Dropdown -->
-    <div class="lang-picker-wrapper">
-      <span class="lang-icon">🌐</span>
-      <select id="langSelector" class="lang-select" aria-label="Select Language">
-        <option value="en">English</option>
-        <option value="hi">हिंदी (Hindi)</option>
-        <option value="ta">தமிழ் (Tamil)</option>
-        <option value="te">తెలుగు (Telugu)</option>
-        <option value="kn">ಕನ್ನಡ (Kannada)</option>
-      </select>
+    <!-- Top-Center: Sleek Brand Badge with Live Telemetry Pulse -->
+    <div class="brand-pill">
+      <img src="logo.svg" alt="SafePath AI Logo" class="brand-logo-img" width="24" height="24" />
+      <span class="brand-title">SafePath AI</span>
+      <span class="brand-live-dot" id="topBrandStatusDot" title="Sensors Standby"></span>
     </div>
 
-    <!-- Theme Toggle Button -->
-    <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle Theme">
-      <span class="theme-icon">☀️</span>
-      <span class="theme-label" data-i18n="theme_daylight">Daylight</span>
-    </button>
-
-    <!-- Cockpit HUD Launch Button -->
-    <button class="hud-toggle-btn" id="hudToggleBtn" aria-label="Toggle Cockpit HUD">
-      <span class="hud-icon">🚀</span>
-      <span class="hud-label" data-i18n="hud_btn">Cockpit HUD</span>
-    </button>
-
-    <!-- Modern Circular Profile / Login Button -->
-    <button class="profile-avatar-btn" id="profileAvatarBtn" aria-label="User Account" title="Sign In / Account">
+    <!-- Top-Right: Circular Profile / Login Button (Opens email & password modal) -->
+    <button class="profile-avatar-btn" id="profileAvatarBtn" aria-label="User Account" title="Sign In / Account" type="button">
       <span class="avatar-icon" id="headerAvatarIcon">👤</span>
       <span class="avatar-online-dot" id="headerAvatarDot" style="display:none;"></span>
     </button>
-  </div>
-</header>
+  </header>
 
-<nav class="app-nav">
-  <a href="index.html" class="active" data-i18n="nav_driver">Driver App</a>
-  <a href="dashboard.html" data-i18n="nav_dashboard">City Dashboard</a>
-</nav>
-
-<main class="app-layout">
-  <!-- Left Column: Primary Driver HUD & Real-Time Sensors -->
-  <div class="column main-column">
-    <!-- Live Collaborative Vehicle Proximity Radar Dynamic Pill Banner -->
+  <!-- Live Collaborative Vehicle Proximity Radar Dynamic Banner -->
+  <div class="floating-radar-container">
     <div class="vehicle-radar-pill" id="vehicleRadarPill" style="display:none;" role="alert">
       <span class="radar-ping-dot"></span>
       <span class="radar-icon">🚗</span>
       <span class="radar-pill-text" id="radarPillText">Vehicle Nearby (~85m away)</span>
-      <button class="radar-pill-dismiss" id="radarPillDismiss" aria-label="Dismiss radar alert">&times;</button>
-    </div>
-
-    <!-- Live Telemetry: Status & Speed Gate Monitoring -->
-    <div class="telemetry-bar">
-      <div class="status-card">
-        <div class="status-dot" id="statusDot"></div>
-        <div class="status-text" id="statusText" data-i18n="status_not_started">Sensors not started yet. Tap "Start Monitoring" below.</div>
-      </div>
-      <div class="speed-gate-card" id="speedGateCard">
-        <div class="speed-readout">
-          <span class="speed-num" id="currentSpeedDisplay">0</span>
-          <span class="speed-unit">KM/H</span>
-        </div>
-        <div class="speed-gate-pill gated" id="speedGateIndicator" data-i18n="speed_gate_gated">Speed Gate: Gated (&lt;12 km/h)</div>
-      </div>
-    </div>
-
-    <div class="queue-badge" id="queueBadge" style="display:none;"></div>
-
-    <div id="map"></div>
-
-    <div class="btn-row">
-      <button class="primary" id="startBtn" data-i18n="start_monitoring_btn">Start Monitoring</button>
-      <button class="secondary" id="hudLaunchBtn"><span class="hud-icon">🚀</span> <span data-i18n="hud_btn">Cockpit HUD</span></button>
-    </div>
-
-    <!-- Demystified Indian Road Simulation Panel -->
-    <details class="demo-panel">
-      <summary>
-        <div class="demo-summary-content">
-          <span data-i18n="demo_tools_title">Demo & Test Tools</span>
-          <span class="demo-badge" data-i18n="demo_tools_badge">Indoor Testing Only</span>
-        </div>
-      </summary>
-      <div class="demo-body">
-        <p class="demo-note" data-i18n="demo_tools_note">
-          Automatic Detection Active: Potholes and unmarked speed breakers are detected 100% automatically using motion & gyroscope sensors while driving (>12 km/h). Bumps under 12 km/h are speed-gated to filter out walking or phone cupholder jostles. These simulation buttons bypass the GPS speed gate for indoor testing and QA.
-        </p>
-        <div class="demo-btn-grid">
-          <button class="secondary mini-btn" id="simulatePotholeMinorBtn" data-i18n="simulate_pothole_minor">Simulate Pothole (Minor)</button>
-          <button class="secondary mini-btn danger-tone" id="simulatePotholeSevereBtn" data-i18n="simulate_pothole_severe">Simulate Pothole (Severe Crater)</button>
-          <button class="secondary mini-btn warning-tone" id="simulateSpeedBreakerBtn" data-i18n="simulate_speedbreaker">Simulate Speed Breaker</button>
-          <button class="secondary mini-btn cyan-tone" id="simulateNearbyVehicleBtn">🚗 Simulate Vehicle Nearby (85m)</button>
-          <button class="secondary mini-btn ghost" id="testChimeBtn" data-i18n="test_audio_chime">Test Audio Chime</button>
-          <button class="secondary mini-btn" id="testHapticHazardBtn">📳 Test Hazard Pulses [250, 100, 250]</button>
-          <button class="secondary mini-btn danger-tone" id="testHapticSevereBtn">📳 Test Severe Pulses (3 Heavy)</button>
-          <button class="secondary mini-btn cyan-tone" id="testHapticProximityBtn">📳 Test Proximity Buzz (Double-Tap)</button>
-        </div>
-      </div>
-    </details>
-
-    <div class="card">
-      <h3><span data-i18n="hazards_logged_session">Hazards Logged This Session</span></h3>
-      <div id="logList">
-        <div class="empty-state" data-i18n="no_hazards_session">No hazards logged yet.</div>
-      </div>
+      <button class="radar-pill-dismiss" id="radarPillDismiss" aria-label="Dismiss radar alert" type="button">&times;</button>
     </div>
   </div>
 
-  <!-- Right Column: Dedicated Photo Evidence & Stream -->
-  <div class="column side-column photo-column-wrapper">
-    <div class="card">
-      <h3><span data-i18n="photo_evidence_title">Photo Evidence & Stream</span></h3>
+  <!-- Floating Bottom Telemetry & Navigation Dock -->
+  <div class="floating-bottom-dock">
+    <!-- Telemetry Row: Speed & Gate Status -->
+    <div class="dock-telemetry-row">
+      <div class="dock-speed-block">
+        <span class="speed-num" id="currentSpeedDisplay">0</span>
+        <span class="speed-unit">KM/H</span>
+      </div>
+      <div class="dock-status-block">
+        <div class="speed-gate-pill gated" id="speedGateIndicator" data-i18n="speed_gate_gated">Speed Gate: Gated (&lt;12 km/h)</div>
+        <div class="dock-status-line">
+          <span class="status-dot" id="statusDot"></span>
+          <span class="status-text" id="statusText" data-i18n="status_not_started">Sensors Standby</span>
+        </div>
+      </div>
+    </div>
 
-      <!-- Snap / Upload Dropzone with Automatic AI Face-Blurring -->
+    <!-- Controls Row: Start Driving + Quick Actions -->
+    <div class="dock-actions-row">
+      <button class="primary start-drive-btn" id="startBtn" data-i18n="start_monitoring_btn" type="button">Start Monitoring</button>
+      <button class="dock-action-icon-btn" id="dockPhotoBtn" title="Snap Photo Evidence" aria-label="Snap Photo Evidence" type="button">📸</button>
+      <button class="dock-action-icon-btn" id="dockLogBtn" title="Session Hazards Log" aria-label="Session Hazards Log" type="button">
+        <span>⚠️</span>
+        <span class="dock-counter-badge" id="dockHazardsCount">0</span>
+      </button>
+      <button class="dock-action-icon-btn" id="hudLaunchBtn" title="Cockpit HUD" aria-label="Cockpit HUD" type="button">🚀</button>
+    </div>
+
+    <div class="queue-badge" id="queueBadge" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     Slide-Up Bottom Sheet for Photo Evidence & Session Hazards
+     Clean, uncluttered, accessible on-demand via dock or menu
+     ============================================================ -->
+<div class="bottom-sheet-backdrop" id="bottomSheetBackdrop"></div>
+<div class="bottom-sheet-drawer" id="bottomSheetDrawer">
+  <div class="bottom-sheet-header">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-tabs">
+      <button class="sheet-tab-btn active" id="sheetTabPhotos" type="button">📸 Photo Evidence</button>
+      <button class="sheet-tab-btn" id="sheetTabHazards" type="button">⚠️ Hazards Log (<span id="sheetHazardsCount">0</span>)</button>
+    </div>
+    <button class="sheet-close-btn" id="sheetCloseBtn" aria-label="Close sheet" type="button">&times;</button>
+  </div>
+  <div class="bottom-sheet-body">
+    <!-- Tab 1: Photo Evidence -->
+    <div class="sheet-tab-content active" id="sheetContentPhotos">
       <div class="photo-dropzone" id="photoDropzone">
         <input type="file" accept="image/*" capture="environment" id="photoInput" style="display:none;" />
         <div class="dropzone-icon">📸</div>
@@ -284,29 +275,31 @@
         <div class="dropzone-desc" data-i18n="photo_dropzone_desc">Tap to snap with camera or drag & drop photo</div>
         <div class="dropzone-hint" id="dropzoneHint" data-i18n="photo_dropzone_hint">Attaches to latest detected hazard</div>
         <div class="privacy-shield">🛡️ <span data-i18n="photo_privacy_badge">AI Face-Blur Active</span></div>
-        <div class="privacy-explainer" data-i18n="photo_privacy_note">
-          Civilian privacy protected: Faces are automatically blurred on-device with AI before upload.
+        <div class="privacy-explainer" data-i18n="photo_privacy_note">Civilian privacy protected: Faces are automatically blurred on-device with AI before upload.</div>
+      </div>
+      <div class="status-text" id="photoStatus" style="font-size:12px; margin-top:8px;"></div>
+      <img id="photoPreview" style="display:none; max-width:100%; border-radius:10px; margin-top:10px;" alt="Captured preview" />
+      <div style="margin-top:18px;">
+        <h4 data-i18n="session_stream_title" style="margin:0 0 10px 0; font-size:14px; font-weight:700;">Session Photo Stream</h4>
+        <div class="session-stream" id="sessionPhotoStream">
+          <div class="empty-state" data-i18n="session_stream_empty">No hazard photos captured in this session yet.</div>
         </div>
       </div>
-
-      <div class="status-text" id="photoStatus" style="font-size:12px; margin-top:8px;"></div>
-      <img id="photoPreview" style="display:none; max-width:100%; border-radius:8px; margin-top:10px;" alt="Captured preview" />
     </div>
 
-    <!-- Real-time Session Photo Stream -->
-    <div class="card">
-      <h3><span data-i18n="session_stream_title">Session Photo Stream</span></h3>
-      <div class="session-stream" id="sessionPhotoStream">
-        <div class="empty-state" data-i18n="session_stream_empty">No hazard photos captured in this session yet.</div>
+    <!-- Tab 2: Session Hazards -->
+    <div class="sheet-tab-content" id="sheetContentHazards">
+      <h4 style="margin:0 0 10px 0; font-size:14px; font-weight:700;"><span data-i18n="hazards_logged_session">Hazards Logged This Session</span></h4>
+      <div id="logList">
+        <div class="empty-state" data-i18n="no_hazards_session">No hazards logged yet.</div>
       </div>
     </div>
   </div>
-</main>
+</div>
 
 <!-- ============================================================
      Cockpit HUD Mode (Ultra-High Contrast OLED Night View)
-     Zero Glare, Pure Black Background, Giant Speedometer,
-     Real-Time Distance Radar to Nearest Hazard
+     Zero Glare, Pure Black Background, Giant Speedometer, Radar
      ============================================================ -->
 <div class="cockpit-hud-overlay" id="cockpitHudOverlay" style="display:none;" aria-hidden="true">
   <div class="hud-container">
@@ -318,8 +311,8 @@
         <span class="hud-pill" data-i18n="hud_title">Cockpit HUD</span>
       </div>
       <div class="hud-header-actions">
-        <button class="hud-icon-btn" id="hudChimeTestBtn" title="Test Chime">🔔</button>
-        <button class="hud-exit-btn" id="hudExitBtn">
+        <button class="hud-icon-btn" id="hudChimeTestBtn" title="Test Chime" type="button">🔔</button>
+        <button class="hud-exit-btn" id="hudExitBtn" type="button">
           <span class="hud-exit-icon">✕</span>
           <span data-i18n="hud_exit">Exit HUD</span>
         </button>
@@ -368,6 +361,7 @@
 
 <!-- ============================================================
      Modern Circular Avatar Auth Modal Popup
+     Click top-right avatar -> enter email & password
      ============================================================ -->
 <div class="auth-modal-overlay" id="authModalOverlay" style="display:none;" aria-hidden="true">
   <div class="auth-modal-card">
@@ -375,25 +369,25 @@
       <div class="auth-modal-avatar-badge" id="modalAvatarBadge">👤</div>
       <div class="auth-modal-title-group">
         <h3 id="authModalTitle" data-i18n="auth_modal_title">SafePath Account</h3>
-        <p id="authModalSubtitle" data-i18n="auth_modal_subtitle">Tie hazard reports & road inspections to your account</p>
+        <p id="authModalSubtitle" data-i18n="auth_modal_subtitle">Enter your email and password to sign in</p>
       </div>
-      <button class="modal-close-btn" id="authModalCloseBtn" aria-label="Close modal">&times;</button>
+      <button class="modal-close-btn" id="authModalCloseBtn" aria-label="Close modal" type="button">&times;</button>
     </div>
 
     <!-- Signed Out View: Tabbed Log In & Sign Up -->
     <div id="authSignedOutView">
       <div class="auth-tabs">
-        <button class="auth-tab-btn active" id="authTabLogin" data-i18n="auth_login">Log In</button>
-        <button class="auth-tab-btn" id="authTabSignup" data-i18n="auth_signup">Sign Up</button>
+        <button class="auth-tab-btn active" id="authTabLogin" data-i18n="auth_login" type="button">Log In</button>
+        <button class="auth-tab-btn" id="authTabSignup" data-i18n="auth_signup" type="button">Sign Up</button>
       </div>
       <form class="auth-form" id="authForm" onsubmit="return false;">
         <div class="auth-input-group">
           <span class="auth-input-icon">✉️</span>
-          <input type="email" id="authEmail" placeholder="Email" data-i18n-placeholder="auth_email_placeholder" autocomplete="email" required />
+          <input type="email" id="authEmail" placeholder="Enter your email" data-i18n-placeholder="auth_email_placeholder" autocomplete="email" required />
         </div>
         <div class="auth-input-group">
           <span class="auth-input-icon">🔒</span>
-          <input type="password" id="authPassword" placeholder="Password" data-i18n-placeholder="auth_password_placeholder" autocomplete="current-password" required />
+          <input type="password" id="authPassword" placeholder="Enter your password" data-i18n-placeholder="auth_password_placeholder" autocomplete="current-password" required />
         </div>
         <div class="auth-action-row">
           <button type="submit" class="auth-submit-btn" id="authSubmitBtn" data-i18n="auth_login">Log In</button>
@@ -413,7 +407,7 @@
         </div>
       </div>
       <div class="auth-action-row" style="margin-top:16px;">
-        <button class="auth-signout-btn" id="authSignOutBtn" data-i18n="auth_signout">Sign Out</button>
+        <button class="auth-signout-btn" id="authSignOutBtn" data-i18n="auth_signout" type="button">Sign Out</button>
       </div>
     </div>
 
@@ -421,6 +415,7 @@
   </div>
 </div>
 
+<!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.js"></script>

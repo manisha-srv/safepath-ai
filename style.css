@@ -2451,3 +2451,519 @@ button.mini.ghost:hover:not(:disabled) {
   border-color: var(--amber);
 }
 
+/* ============================================================
+   Clean Map-First Driver App Viewport & Floating Controls
+   ============================================================ */
+body.driver-app-body {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.driver-screen-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#map.fullscreen-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  z-index: 1;
+}
+
+/* Floating Minimal Top Bar */
+.floating-top-bar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.floating-top-bar > * {
+  pointer-events: auto;
+}
+
+/* Circular Hamburger Icon Button */
+.floating-top-bar .hamburger-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(12, 20, 36, 0.88);
+  backdrop-filter: blur(16px);
+  border: 1.5px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.floating-top-bar .hamburger-btn:hover {
+  border-color: var(--cyan-radar);
+  background: var(--bg-card-elevated);
+  box-shadow: 0 0 16px var(--cyan-radar-glow);
+  transform: scale(1.06);
+}
+
+.floating-top-bar .hamburger-bar {
+  width: 18px;
+  height: 2px;
+  background: #ffffff;
+  border-radius: 2px;
+}
+
+/* Sleek Brand Pill */
+.brand-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(12, 20, 36, 0.88);
+  backdrop-filter: blur(16px);
+  border: 1.5px solid var(--border-color);
+  padding: 8px 18px;
+  border-radius: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+.brand-pill .brand-logo-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.brand-pill .brand-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: #ffffff;
+}
+
+.brand-pill .brand-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #64748b;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.brand-pill .brand-live-dot.live {
+  background: var(--emerald);
+  box-shadow: 0 0 10px var(--emerald-glow);
+}
+
+/* Circular Avatar Icon Button */
+.floating-top-bar .profile-avatar-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(12, 20, 36, 0.88);
+  backdrop-filter: blur(16px);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+  color: #ffffff;
+}
+
+.floating-top-bar .profile-avatar-btn:hover {
+  border-color: var(--cyan-radar);
+  box-shadow: 0 0 16px var(--cyan-radar-glow);
+  transform: scale(1.06);
+}
+
+.floating-top-bar .avatar-online-dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--emerald);
+  border: 2px solid #0c1424;
+  box-shadow: 0 0 6px var(--emerald-glow);
+}
+
+/* Floating Proximity Radar Container */
+.floating-radar-container {
+  position: absolute;
+  top: 76px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: center;
+  z-index: 999;
+  pointer-events: none;
+}
+
+.floating-radar-container .vehicle-radar-pill {
+  pointer-events: auto;
+  margin-bottom: 0;
+}
+
+/* Floating Bottom Navigation Dock */
+.floating-bottom-dock {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: min(92vw, 460px);
+  background: rgba(12, 20, 36, 0.88);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 22px;
+  padding: 14px 18px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.25s ease;
+}
+
+.dock-telemetry-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dock-speed-block {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.dock-speed-block .speed-num {
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+}
+
+.dock-speed-block .speed-unit {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--amber);
+  letter-spacing: 0.5px;
+}
+
+.dock-status-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.dock-status-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dock-status-line .status-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.dock-status-line .status-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.dock-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.start-drive-btn {
+  flex: 1;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 12px;
+  background: var(--amber);
+  color: #090d16;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px var(--amber-glow);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.start-drive-btn:hover {
+  background: var(--amber-hover);
+  transform: translateY(-1px);
+}
+
+.start-drive-btn.active-monitoring {
+  background: var(--emerald);
+  color: #051a11;
+  box-shadow: 0 0 20px var(--emerald-glow);
+  animation: pulseEmeraldBtn 2s infinite ease;
+}
+
+@keyframes pulseEmeraldBtn {
+  0%, 100% { box-shadow: 0 0 14px var(--emerald-glow); }
+  50% { box-shadow: 0 0 24px rgba(16, 185, 129, 0.7); }
+}
+
+.dock-action-icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.dock-action-icon-btn:hover {
+  border-color: var(--cyan-radar);
+  background: var(--bg-card-elevated);
+  box-shadow: 0 0 12px var(--cyan-radar-glow);
+}
+
+.dock-counter-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--amber);
+  color: #090d16;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 1px 5px;
+  border-radius: 10px;
+  border: 1.5px solid var(--bg-surface);
+}
+
+/* Slide-Up Bottom Sheet for Photo Evidence & Session Hazards */
+.bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 13, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1050;
+  display: none;
+  transition: opacity 0.25s ease;
+}
+
+.bottom-sheet-drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 82vh;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.75);
+  z-index: 1051;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.bottom-sheet-drawer.open {
+  transform: translateY(0);
+}
+
+.bottom-sheet-header {
+  padding: 14px 20px 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+.bottom-sheet-handle {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 38px;
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.bottom-sheet-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.sheet-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.sheet-tab-btn:hover {
+  color: var(--text-main);
+  background: var(--bg-card);
+}
+
+.sheet-tab-btn.active {
+  background: var(--bg-card-elevated);
+  color: #ffffff;
+  border-color: var(--border-color);
+}
+
+.sheet-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+.sheet-close-btn:hover {
+  color: #ffffff;
+}
+
+.bottom-sheet-body {
+  padding: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sheet-tab-content {
+  display: none;
+}
+
+.sheet-tab-content.active {
+  display: block;
+}
+
+.sidebar-btn-link {
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.sidebar-demo-accordion {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sidebar-demo-accordion summary {
+  cursor: pointer;
+  color: var(--text-muted);
+  user-select: none;
+  outline: none;
+}
+
+.sidebar-demo-accordion summary:hover {
+  color: var(--text-main);
+}
+
+/* Light Theme Adjustments for Floating Elements */
+[data-theme="light"] .floating-bottom-dock {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: #cbd5e1;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] .dock-speed-block .speed-num {
+  color: #0f172a;
+}
+
+[data-theme="light"] .floating-top-bar .hamburger-btn,
+[data-theme="light"] .brand-pill,
+[data-theme="light"] .floating-top-bar .profile-avatar-btn {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+[data-theme="light"] .brand-pill .brand-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .floating-top-bar .hamburger-bar {
+  background: #0f172a;
+}
+
+[data-theme="light"] .dock-action-icon-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .bottom-sheet-drawer {
+  background: #ffffff;
+  border-top-color: #cbd5e1;
+  box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.2);
+}
+
+[data-theme="light"] .sheet-tab-btn.active {
+  background: #e2e8f0;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+

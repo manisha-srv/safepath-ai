@@ -354,6 +354,13 @@ function initMap() {
     attribution: "&copy; OpenStreetMap contributors",
     maxZoom: 19,
   }).addTo(map);
+
+  window.addEventListener("resize", () => {
+    if (map) map.invalidateSize();
+  });
+  setTimeout(() => {
+    if (map) map.invalidateSize();
+  }, 250);
 }
 
 function updateDriverPosition(lat, lng) {
@@ -377,9 +384,11 @@ function updateDriverPosition(lat, lng) {
 // ---------------------------------------------------------------
 function setStatus(live, key, fallbackText) {
   currentStatusKey = key;
-  statusDot.classList.toggle("live", live);
+  if (statusDot) statusDot.classList.toggle("live", live);
+  const brandDot = document.getElementById("topBrandStatusDot");
+  if (brandDot) brandDot.classList.toggle("live", live);
   const text = window.i18n ? window.i18n.t(key) : fallbackText;
-  statusText.textContent = text || fallbackText;
+  if (statusText) statusText.textContent = text || fallbackText;
   if (hudSensorState) {
     hudSensorState.textContent = live ? "ACTIVE" : "STANDBY";
   }
@@ -694,13 +703,21 @@ async function logHazard(lat, lng, source, hazardType = "pothole", severity = "m
     dropzoneHint.textContent = `Attached to ${typeLabel.toLowerCase()} detected at ${timeStr}`;
   }
 
-  // Update HUD & Sidebar stats
+  // Update HUD, Sidebar & Dock stats
   if (hudSessionHazards) {
     hudSessionHazards.textContent = sessionLogs.length;
   }
   const sbTotal = document.getElementById("sidebarTotalHazards");
   if (sbTotal) {
     sbTotal.textContent = sessionLogs.length;
+  }
+  const dockCount = document.getElementById("dockHazardsCount");
+  if (dockCount) {
+    dockCount.textContent = sessionLogs.length;
+  }
+  const sheetCount = document.getElementById("sheetHazardsCount");
+  if (sheetCount) {
+    sheetCount.textContent = sessionLogs.length;
   }
 }
 
@@ -1306,10 +1323,60 @@ function closeSidebar() {
 if (hamburgerBtn) hamburgerBtn.addEventListener("click", openSidebar);
 if (sidebarCloseBtn) sidebarCloseBtn.addEventListener("click", closeSidebar);
 if (sidebarBackdrop) sidebarBackdrop.addEventListener("click", closeSidebar);
+// ---------------------------------------------------------------
+// Slide-Up Bottom Sheet Drawer Management
+// (Photo Evidence & Session Hazards Log)
+// ---------------------------------------------------------------
+const bottomSheetDrawer = document.getElementById("bottomSheetDrawer");
+const bottomSheetBackdrop = document.getElementById("bottomSheetBackdrop");
+const sheetTabPhotos = document.getElementById("sheetTabPhotos");
+const sheetTabHazards = document.getElementById("sheetTabHazards");
+const sheetContentPhotos = document.getElementById("sheetContentPhotos");
+const sheetContentHazards = document.getElementById("sheetContentHazards");
+const sheetCloseBtn = document.getElementById("sheetCloseBtn");
+const dockPhotoBtn = document.getElementById("dockPhotoBtn");
+const dockLogBtn = document.getElementById("dockLogBtn");
+
+function openBottomSheet(tab = "photos") {
+  if (bottomSheetDrawer) bottomSheetDrawer.classList.add("open");
+  if (bottomSheetBackdrop) bottomSheetBackdrop.style.display = "block";
+  switchSheetTab(tab);
+}
+
+function closeBottomSheet() {
+  if (bottomSheetDrawer) bottomSheetDrawer.classList.remove("open");
+  if (bottomSheetBackdrop) bottomSheetBackdrop.style.display = "none";
+}
+
+function switchSheetTab(tab) {
+  if (tab === "photos") {
+    if (sheetTabPhotos) sheetTabPhotos.classList.add("active");
+    if (sheetTabHazards) sheetTabHazards.classList.remove("active");
+    if (sheetContentPhotos) sheetContentPhotos.classList.add("active");
+    if (sheetContentHazards) sheetContentHazards.classList.remove("active");
+  } else {
+    if (sheetTabHazards) sheetTabHazards.classList.add("active");
+    if (sheetTabPhotos) sheetTabPhotos.classList.remove("active");
+    if (sheetContentHazards) sheetContentHazards.classList.add("active");
+    if (sheetContentPhotos) sheetContentPhotos.classList.remove("active");
+  }
+}
+
+if (sheetTabPhotos) sheetTabPhotos.addEventListener("click", () => switchSheetTab("photos"));
+if (sheetTabHazards) sheetTabHazards.addEventListener("click", () => switchSheetTab("hazards"));
+if (sheetCloseBtn) sheetCloseBtn.addEventListener("click", closeBottomSheet);
+if (bottomSheetBackdrop) bottomSheetBackdrop.addEventListener("click", closeBottomSheet);
+
+if (dockPhotoBtn) {
+  dockPhotoBtn.addEventListener("click", () => openBottomSheet("photos"));
+}
+if (dockLogBtn) {
+  dockLogBtn.addEventListener("click", () => openBottomSheet("hazards"));
+}
 if (navLinkPhotoEvidence) {
   navLinkPhotoEvidence.addEventListener("click", () => {
     closeSidebar();
-    if (photoDropzone) photoDropzone.scrollIntoView({ behavior: "smooth" });
+    openBottomSheet("photos");
   });
 }
 
@@ -1469,8 +1536,8 @@ startBtn.addEventListener("click", async () => {
   startMotionDetection();
   listenForKnownHazards();
 
-  setStatus(true, "status_monitoring", "Monitoring live. Drive normally — hazards log automatically.");
-  startBtn.textContent = window.i18n ? window.i18n.t("status_active") : "Monitoring Active";
+  startBtn.textContent = window.i18n ? window.i18n.t("status_active") : "● Monitoring Live";
+  startBtn.classList.add("active-monitoring");
 
   const sbSensors = document.getElementById("sidebarSensorsStatus");
   if (sbSensors) sbSensors.textContent = "ACTIVE";
@@ -1595,6 +1662,7 @@ window.addEventListener("keydown", (e) => {
   } else if (e.key === "Escape") {
     if (hudActive) closeCockpitHud();
     if (appSidebar && appSidebar.classList.contains("open")) closeSidebar();
+    if (bottomSheetDrawer && bottomSheetDrawer.classList.contains("open")) closeBottomSheet();
   }
 });
 
