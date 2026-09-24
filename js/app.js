@@ -1324,50 +1324,174 @@ if (hamburgerBtn) hamburgerBtn.addEventListener("click", openSidebar);
 if (sidebarCloseBtn) sidebarCloseBtn.addEventListener("click", closeSidebar);
 if (sidebarBackdrop) sidebarBackdrop.addEventListener("click", closeSidebar);
 // ---------------------------------------------------------------
-// Slide Down & Quick Navigation to Bottom Sections
-// (Photo Evidence, Session Hazards Log, Simulation Tools)
+// Interactive Sliding Bottom Sheet (Apple Maps / Google Maps Style)
+// Smoothly slide up to access Hazards Log, Photo Evidence & Tools,
+// and slide down to collapse back to the clean map viewport.
 // ---------------------------------------------------------------
+const driverBottomSheet = document.getElementById("driverBottomSheet");
+const sheetDragHeader = document.getElementById("sheetDragHeader");
+const sheetToggleBtn = document.getElementById("sheetToggleBtn");
+const sheetExpandableContent = document.getElementById("sheetExpandableContent");
+const slideDownTopBtn = document.getElementById("slideDownTopBtn");
+const slideDownCollapseBtn = document.getElementById("slideDownCollapseBtn");
 const dockPhotoBtn = document.getElementById("dockPhotoBtn");
 const dockLogBtn = document.getElementById("dockLogBtn");
 const slideDownHint = document.getElementById("slideDownHint");
 const backToMapBtn = document.getElementById("backToMapBtn");
 
-function scrollToSection(sectionId) {
-  const el = document.getElementById(sectionId);
-  if (el) {
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+function expandBottomSheet(targetSectionId = null) {
+  if (!driverBottomSheet) return;
+  driverBottomSheet.classList.remove("collapsed");
+  driverBottomSheet.classList.add("expanded");
+  if (sheetToggleBtn) {
+    sheetToggleBtn.setAttribute("title", "Slide Down to Map");
+    sheetToggleBtn.setAttribute("aria-label", "Slide Down to Map");
+  }
+  if (targetSectionId) {
+    setTimeout(() => {
+      const el = document.getElementById(targetSectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 120);
   }
 }
 
+function collapseBottomSheet() {
+  if (!driverBottomSheet) return;
+  driverBottomSheet.classList.remove("expanded");
+  driverBottomSheet.classList.add("collapsed");
+  if (sheetToggleBtn) {
+    sheetToggleBtn.setAttribute("title", "Expand to Hazards & Evidence");
+    sheetToggleBtn.setAttribute("aria-label", "Expand to Hazards & Evidence");
+  }
+  if (sheetExpandableContent) {
+    sheetExpandableContent.scrollTop = 0;
+  }
+}
+
+function toggleBottomSheet() {
+  if (!driverBottomSheet) return;
+  if (driverBottomSheet.classList.contains("expanded")) {
+    collapseBottomSheet();
+  } else {
+    expandBottomSheet();
+  }
+}
+
+// Drag Header Tap/Click: toggles sheet unless clicked directly on a child button
+if (sheetDragHeader) {
+  sheetDragHeader.addEventListener("click", (e) => {
+    if (e.target.closest("button")) return;
+    toggleBottomSheet();
+  });
+}
+
+// Sheet toggle button (▲/▼)
+if (sheetToggleBtn) {
+  sheetToggleBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleBottomSheet();
+  });
+}
+
+// Quick action buttons in dock header
 if (dockPhotoBtn) {
-  dockPhotoBtn.addEventListener("click", () => scrollToSection("photoEvidenceSection"));
+  dockPhotoBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    expandBottomSheet("photoEvidenceSection");
+  });
 }
+
 if (dockLogBtn) {
-  dockLogBtn.addEventListener("click", () => scrollToSection("hazardsLogSection"));
+  dockLogBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    expandBottomSheet("hazardsLogSection");
+  });
 }
+
+// Slide Down Collapse Buttons
+if (slideDownTopBtn) {
+  slideDownTopBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    collapseBottomSheet();
+  });
+}
+
+if (slideDownCollapseBtn) {
+  slideDownCollapseBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    collapseBottomSheet();
+  });
+}
+
+// Touch swipe gestures for native mobile sliding
+let sheetTouchStartY = 0;
+if (sheetDragHeader) {
+  sheetDragHeader.addEventListener("touchstart", (e) => {
+    sheetTouchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  sheetDragHeader.addEventListener("touchend", (e) => {
+    const endY = e.changedTouches[0].clientY;
+    const diffY = endY - sheetTouchStartY;
+    if (diffY > 35) {
+      // Swiped down
+      collapseBottomSheet();
+    } else if (diffY < -35) {
+      // Swiped up
+      expandBottomSheet();
+    }
+  }, { passive: true });
+}
+
+// Swipe down at the very top of expandable content to collapse
+if (sheetExpandableContent) {
+  let contentTouchStartY = 0;
+  sheetExpandableContent.addEventListener("touchstart", (e) => {
+    contentTouchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  sheetExpandableContent.addEventListener("touchend", (e) => {
+    const endY = e.changedTouches[0].clientY;
+    const diffY = endY - contentTouchStartY;
+    if (sheetExpandableContent.scrollTop <= 2 && diffY > 50) {
+      collapseBottomSheet();
+    }
+  }, { passive: true });
+}
+
+// Keyboard shortcut: Escape collapses the bottom sheet
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && driverBottomSheet && driverBottomSheet.classList.contains("expanded")) {
+    collapseBottomSheet();
+  }
+});
+
+// Legacy and sidebar links compatibility
 if (slideDownHint) {
   slideDownHint.addEventListener("click", (e) => {
     e.preventDefault();
-    scrollToSection("bottomContent");
+    expandBottomSheet();
   });
 }
 if (backToMapBtn) {
   backToMapBtn.addEventListener("click", (e) => {
     e.preventDefault();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    collapseBottomSheet();
   });
 }
 if (navLinkPhotoEvidence) {
   navLinkPhotoEvidence.addEventListener("click", () => {
     closeSidebar();
-    scrollToSection("photoEvidenceSection");
+    expandBottomSheet("photoEvidenceSection");
   });
 }
 const navLinkDriver = document.getElementById("navLinkDriver");
 if (navLinkDriver) {
   navLinkDriver.addEventListener("click", () => {
     closeSidebar();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    collapseBottomSheet();
   });
 }
 
