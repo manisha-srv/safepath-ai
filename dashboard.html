@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SafePath AI — City Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="logo.svg" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="style.css" />
 <script src="js/theme.js"></script>
@@ -11,11 +12,105 @@
 </head>
 <body>
 
-<header class="app-header">
-  <div class="brand-block">
-    <h1 data-i18n="app_title">SafePath AI</h1>
-    <div class="tag" data-i18n="tag_dashboard">CITY DASHBOARD</div>
+<!-- Slide-out Sidebar Drawer & Backdrop -->
+<div class="sidebar-backdrop" id="sidebarBackdrop" style="display:none;"></div>
+<aside class="app-sidebar" id="appSidebar" aria-label="Main Navigation Menu">
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <img src="logo.svg" alt="SafePath Logo" class="sidebar-logo-img" width="36" height="36" />
+      <div>
+        <div class="sidebar-title">SafePath AI</div>
+        <div class="sidebar-subtitle">Smart Road Telemetry</div>
+      </div>
+    </div>
+    <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close menu">&times;</button>
   </div>
+
+  <div class="sidebar-body">
+    <!-- User Profile Preview in Sidebar -->
+    <div class="sidebar-user-card" id="sidebarUserCard" title="Tap to sign in or manage account">
+      <div class="sidebar-user-avatar" id="sidebarUserAvatar">👤</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name" id="sidebarUserName">Guest Driver</div>
+        <div class="sidebar-user-sub" id="sidebarUserSub">Tap to Sign In / Manage</div>
+      </div>
+    </div>
+
+    <!-- Navigation Section -->
+    <div class="sidebar-section-title" data-i18n="sidebar_nav_title">NAVIGATION</div>
+    <nav class="sidebar-nav-links">
+      <a href="index.html" class="sidebar-link" id="navLinkDriver">
+        <span class="sidebar-icon">🚗</span>
+        <span class="sidebar-link-text" data-i18n="nav_driver">Driver App</span>
+      </a>
+      <a href="dashboard.html" class="sidebar-link active" id="navLinkDashboard">
+        <span class="sidebar-icon">📊</span>
+        <span class="sidebar-link-text" data-i18n="nav_dashboard">City Dashboard</span>
+        <span class="sidebar-badge-live">LIVE</span>
+      </a>
+      <a href="#reportedGallery" class="sidebar-link" id="navLinkPhotoEvidence">
+        <span class="sidebar-icon">📸</span>
+        <span class="sidebar-link-text" data-i18n="reported_gallery_title">Photo Gallery</span>
+      </a>
+      <div class="sidebar-stat-chip">
+        <span class="sidebar-icon">⚠️</span>
+        <span class="sidebar-link-text" data-i18n="sidebar_total_hazards">Total Hazards</span>
+        <span class="sidebar-chip-val" id="sidebarTotalHazards">0</span>
+      </div>
+    </nav>
+
+    <!-- Language Selector in Sidebar -->
+    <div class="sidebar-section-title">LANGUAGE SETTINGS</div>
+    <div class="sidebar-lang-picker">
+      <span class="lang-icon">🌐</span>
+      <select id="sidebarLangSelector" class="sidebar-select" aria-label="Select Language">
+        <option value="en">English</option>
+        <option value="hi">हिंदी (Hindi)</option>
+        <option value="ta">தமிழ் (Tamil)</option>
+        <option value="te">తెలుగు (Telugu)</option>
+        <option value="kn">ಕನ್ನಡ (Kannada)</option>
+      </select>
+    </div>
+
+    <!-- City Overview in Sidebar -->
+    <div class="sidebar-section-title">MUNICIPAL OVERVIEW</div>
+    <div class="sidebar-stats-grid">
+      <div class="sidebar-stat-box">
+        <div class="sidebar-stat-num" id="sidebarTotalLogged">0</div>
+        <div class="sidebar-stat-lbl">TOTAL LOGGED</div>
+      </div>
+      <div class="sidebar-stat-box">
+        <div class="sidebar-stat-num" id="sidebarTodayLogged">0</div>
+        <div class="sidebar-stat-lbl">TODAY</div>
+      </div>
+      <div class="sidebar-stat-box">
+        <div class="sidebar-stat-num" id="sidebarSevereLogged" style="color:var(--crimson-crater);">0</div>
+        <div class="sidebar-stat-lbl">SEVERE CRATERS</div>
+      </div>
+      <div class="sidebar-stat-box">
+        <div class="sidebar-stat-num" id="sidebarReviewLogged">0</div>
+        <div class="sidebar-stat-lbl">PENDING REVIEW</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<header class="app-header">
+  <div class="header-left">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open Navigation Drawer" title="Navigation, Controls & Stats">
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+    </button>
+    <div class="brand-block">
+      <img src="logo.svg" alt="SafePath AI Navigation Logo" class="app-logo-img" width="34" height="34" />
+      <div>
+        <h1 data-i18n="app_title">SafePath AI</h1>
+        <div class="tag" data-i18n="tag_dashboard">CITY DASHBOARD</div>
+      </div>
+    </div>
+  </div>
+
   <div class="header-controls">
     <div class="lang-picker-wrapper">
       <span class="lang-icon">🌐</span>
@@ -31,6 +126,11 @@
       <span class="theme-icon">☀️</span>
       <span class="theme-label" data-i18n="theme_daylight">Daylight</span>
     </button>
+    <!-- Modern Circular Profile / Login Button -->
+    <button class="profile-avatar-btn" id="profileAvatarBtn" aria-label="User Account" title="Sign In / Account">
+      <span class="avatar-icon" id="headerAvatarIcon">👤</span>
+      <span class="avatar-online-dot" id="headerAvatarDot" style="display:none;"></span>
+    </button>
   </div>
 </header>
 
@@ -38,20 +138,6 @@
   <a href="index.html" data-i18n="nav_driver">Driver App</a>
   <a href="dashboard.html" class="active" data-i18n="nav_dashboard">City Dashboard</a>
 </nav>
-
-<div class="auth-card" id="authCard">
-  <div id="authSignedOutView" class="auth-row">
-    <input type="email" id="authEmail" placeholder="Email" data-i18n-placeholder="auth_email_placeholder" autocomplete="email" />
-    <input type="password" id="authPassword" placeholder="Password" data-i18n-placeholder="auth_password_placeholder" autocomplete="current-password" />
-    <button class="mini" id="authSignInBtn" data-i18n="auth_login">Log In</button>
-    <button class="mini ghost" id="authSignUpBtn" data-i18n="auth_signup">Sign Up</button>
-  </div>
-  <div id="authSignedInView" class="auth-row" style="display:none;">
-    <span><span data-i18n="auth_signed_in_as">Signed in as</span> <strong id="authUserEmail"></strong></span>
-    <button class="mini ghost" id="authSignOutBtn" data-i18n="auth_signout">Sign Out</button>
-  </div>
-  <div class="status-text" id="authStatus"></div>
-</div>
 
 <main class="app-layout">
   <!-- Left Column: City Telemetry, Map & Moderation Queue -->
@@ -137,6 +223,59 @@
         <span style="color:var(--emerald); font-weight:700;">🛡️ AI Face-Blurred</span>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Modern Circular Avatar Auth Modal Popup -->
+<div class="auth-modal-overlay" id="authModalOverlay" style="display:none;" aria-hidden="true">
+  <div class="auth-modal-card">
+    <div class="auth-modal-header">
+      <div class="auth-modal-avatar-badge" id="modalAvatarBadge">👤</div>
+      <div class="auth-modal-title-group">
+        <h3 id="authModalTitle" data-i18n="auth_modal_title">SafePath Account</h3>
+        <p id="authModalSubtitle" data-i18n="auth_modal_subtitle">Tie hazard reports & road inspections to your account</p>
+      </div>
+      <button class="modal-close-btn" id="authModalCloseBtn" aria-label="Close modal">&times;</button>
+    </div>
+
+    <!-- Signed Out View: Tabbed Log In & Sign Up -->
+    <div id="authSignedOutView">
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="authTabLogin" data-i18n="auth_login">Log In</button>
+        <button class="auth-tab-btn" id="authTabSignup" data-i18n="auth_signup">Sign Up</button>
+      </div>
+      <form class="auth-form" id="authForm" onsubmit="return false;">
+        <div class="auth-input-group">
+          <span class="auth-input-icon">✉️</span>
+          <input type="email" id="authEmail" placeholder="Email" data-i18n-placeholder="auth_email_placeholder" autocomplete="email" required />
+        </div>
+        <div class="auth-input-group">
+          <span class="auth-input-icon">🔒</span>
+          <input type="password" id="authPassword" placeholder="Password" data-i18n-placeholder="auth_password_placeholder" autocomplete="current-password" required />
+        </div>
+        <div class="auth-action-row">
+          <button type="submit" class="auth-submit-btn" id="authSubmitBtn" data-i18n="auth_login">Log In</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Signed In View -->
+    <div id="authSignedInView" style="display:none;">
+      <div class="auth-user-info-card">
+        <div class="auth-user-email-row">
+          <span class="auth-label" data-i18n="auth_signed_in_as">Signed in as</span>
+          <strong id="authUserEmail" class="auth-user-email"></strong>
+        </div>
+        <div class="auth-badge-row">
+          <span class="badge-verified" data-i18n="auth_verified_badge">🛡️ Verified Road Inspector</span>
+        </div>
+      </div>
+      <div class="auth-action-row" style="margin-top:16px;">
+        <button class="auth-signout-btn" id="authSignOutBtn" data-i18n="auth_signout">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="auth-status-msg" id="authStatus"></div>
   </div>
 </div>
 

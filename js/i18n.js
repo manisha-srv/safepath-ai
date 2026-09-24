@@ -109,10 +109,36 @@ const TRANSLATIONS = {
     severity_severe: "Severe Crater",
 
     // Speed Gate
-    speed_gate_armed: "Speed Gate: Armed (>15 km/h)",
-    speed_gate_gated: "Speed Gate: Gated (<15 km/h — filtering false jostles)",
-    speed_gate_ignored: "Jostle ignored: Vehicle speed below 15 km/h",
+    speed_gate_armed: "Speed Gate: Armed (>12 km/h)",
+    speed_gate_gated: "Speed Gate: Gated (<12 km/h — filtering false jostles)",
+    speed_gate_ignored: "Jostle ignored: Vehicle speed below 12 km/h",
     speed_gate_bypassed: "Simulated hit (Speed gate bypassed for testing)",
+
+    // 3-Way Alert System & Vibration
+    alert_mode_sound: "Sound",
+    alert_mode_sound_desc: "Voice + Chime + Haptics",
+    alert_mode_vibrate: "Vibrate",
+    alert_mode_vibrate_desc: "Physical pulses only (quiet driving)",
+    alert_mode_silent: "Silent",
+    alert_mode_silent_desc: "Visual notifications only",
+    vibration_on: "Haptics ON",
+    vibration_off: "Haptics OFF",
+
+    // Collaborative Vehicle Proximity Radar
+    vehicle_nearby: "Vehicle Nearby (~{dist}m away)",
+    simulate_vehicle_nearby: "Simulate Vehicle Nearby (85m)",
+    test_haptics_hazard: "Test Haptics (Hazard)",
+    test_haptics_severe: "Test Haptics (Severe)",
+    test_haptics_proximity: "Test Haptics (Proximity)",
+
+    // Auth & Navigation
+    auth_modal_title: "SafePath Account",
+    auth_modal_subtitle: "Sign in to tie reports & road inspections to your account",
+    auth_verified_badge: "🛡️ Verified Road Inspector",
+    sidebar_nav_driver: "Driver App",
+    sidebar_nav_dashboard: "City Dashboard",
+    sidebar_nav_evidence: "Photo Evidence",
+    sidebar_total_hazards: "Total Hazards",
 
     // Voice Alerts
     voice_pothole_detected: "Caution. Pothole detected. Slow down.",
@@ -244,9 +270,9 @@ const TRANSLATIONS = {
     severity_severe: "खतरनाक गड्ढा (Severe Crater)",
 
     // Speed Gate
-    speed_gate_armed: "स्पीड गेट: सक्रिय (>15 किमी/घंटा)",
-    speed_gate_gated: "स्पीड गेट: निष्क्रिय (<15 किमी/घंटा — झूठे झटके फ़िल्टर)",
-    speed_gate_ignored: "झटका नजरअंदाज: गति 15 किमी/घंटा से कम है",
+    speed_gate_armed: "स्पीड गेट: सक्रिय (>12 किमी/घंटा)",
+    speed_gate_gated: "स्पीड गेट: निष्क्रिय (<12 किमी/घंटा — झूठे झटके फ़िल्टर)",
+    speed_gate_ignored: "झटका नजरअंदाज: गति 12 किमी/घंटा से कम है",
     speed_gate_bypassed: "सिमुलेटेड (स्पीड गेट परीक्षण हेतु बायपास)",
 
     // Voice Alerts
@@ -379,9 +405,9 @@ const TRANSLATIONS = {
     severity_severe: "ஆபத்தான பெரும் பள்ளம்",
 
     // Speed Gate
-    speed_gate_armed: "வேகக் கட்டுப்பாடு: செயலில் (>15 கிமீ/மணி)",
-    speed_gate_gated: "வேகக் கட்டுப்பாடு: தடுக்கப்பட்டது (<15 கிமீ/மணி — தவறான அதிர்வுகள் தவிர்க்கப்படும்)",
-    speed_gate_ignored: "அதிர்வு நிராகரிக்கப்பட்டது: வேகம் 15 கிமீ/மணிக்கு குறைவாக உள்ளது",
+    speed_gate_armed: "வேகக் கட்டுப்பாடு: செயலில் (>12 கிமீ/மணி)",
+    speed_gate_gated: "வேகக் கட்டுப்பாடு: தடுக்கப்பட்டது (<12 கிமீ/மணி — தவறான அதிர்வுகள் தவிர்க்கப்படும்)",
+    speed_gate_ignored: "அதிர்வு நிராகரிக்கப்பட்டது: வேகம் 12 கிமீ/மணிக்கு குறைவாக உள்ளது",
     speed_gate_bypassed: "மாதிரி நிகழ்வு (சோதனைக்காக வேகம் புறக்கணிக்கப்பட்டது)",
 
     // Voice Alerts
@@ -514,9 +540,9 @@ const TRANSLATIONS = {
     severity_severe: "తీవ్రమైన ప్రమాదకర గుంత",
 
     // Speed Gate
-    speed_gate_armed: "స్పీడ్ గేట్: సక్రియం (>15 కిమీ/గం)",
-    speed_gate_gated: "స్పీడ్ గేట్: పరిమితం (<15 కిమీ/గం — తప్పుడు కుదుపులు ఫిల్టర్ చేయబడతాయి)",
-    speed_gate_ignored: "కుదుపు విస్మరించబడింది: వేగం 15 కిమీ/గం కంటే తక్కువ",
+    speed_gate_armed: "స్పీడ్ గేట్: సక్రియం (>12 కిమీ/గం)",
+    speed_gate_gated: "స్పీడ్ గేట్: పరిమితం (<12 కిమీ/గం — తప్పుడు కుదుపులు ఫిల్టర్ చేయబడతాయి)",
+    speed_gate_ignored: "కుదుపు విస్మరించబడింది: వేగం 12 కిమీ/గం కంటే తక్కువ",
     speed_gate_bypassed: "సిమ్యులేట్ చేయబడింది (టెస్టింగ్ కోసం స్పీడ్ గేట్ బైపాస్)",
 
     // Voice Alerts
@@ -649,9 +675,9 @@ const TRANSLATIONS = {
     severity_severe: "ಅಪಾಯಕಾರಿ ದೊಡ್ಡ ಗುಂಡಿ",
 
     // Speed Gate
-    speed_gate_armed: "ಸ್ಪೀಡ್ ಗೇಟ್: ಸಕ್ರಿಯ (>15 ಕಿಮೀ/ಗಂ)",
-    speed_gate_gated: "ಸ್ಪೀಡ್ ಗೇಟ್: ತಡೆಹಿಡಿಯಲಾಗಿದೆ (<15 ಕಿಮೀ/ಗಂ — ತಪ್ಪು ಆಘಾತಗಳು ನಿರ್ಲಕ್ಷಿಸಲ್ಪಡುತ್ತವೆ)",
-    speed_gate_ignored: "ಆಘಾತ ನಿರ್ಲಕ್ಷಿಸಲಾಗಿದೆ: ವೇಗ 15 ಕಿಮೀ/ಗಂಟೆಗಿಂತ ಕಡಿಮೆ",
+    speed_gate_armed: "ಸ್ಪೀಡ್ ಗೇಟ್: ಸಕ್ರಿಯ (>12 ಕಿಮೀ/ಗಂ)",
+    speed_gate_gated: "ಸ್ಪೀಡ್ ಗೇಟ್: ತಡೆಹಿಡಿಯಲಾಗಿದೆ (<12 ಕಿಮೀ/ಗಂ — ತಪ್ಪು ಆಘಾತಗಳು ನಿರ್ಲಕ್ಷಿಸಲ್ಪಡುತ್ತವೆ)",
+    speed_gate_ignored: "ಆಘಾತ ನಿರ್ಲಕ್ಷಿಸಲಾಗಿದೆ: ವೇಗ 12 ಕಿಮೀ/ಗಂಟೆಗಿಂತ ಕಡಿಮೆ",
     speed_gate_bypassed: "ಸಿಮ್ಯುಲೇಟ್ ಮಾಡಲಾಗಿದೆ (ಪರೀಕ್ಷೆಗಾಗಿ ಸ್ಪೀಡ್ ಗೇಟ್ ಬೈಪಾಸ್)",
 
     // Voice Alerts

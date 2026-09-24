@@ -177,10 +177,23 @@ function render() {
   const pendingReview = hazards.filter((h) => h.status === "flagged");
   const severeHazards = hazards.filter((h) => h.severity === "severe" && h.status !== "repaired");
 
+  const loggedToday = hazards.filter((h) => isToday(h.timestamp));
   totalCountEl.textContent = hazards.length;
-  todayCountEl.textContent = hazards.filter((h) => isToday(h.timestamp)).length;
+  todayCountEl.textContent = loggedToday.length;
   if (severeCountEl) severeCountEl.textContent = severeHazards.length;
   reviewCountEl.textContent = pendingReview.length;
+
+  // Sync Sidebar Drawer Stats
+  const sbTotal = document.getElementById("sidebarTotalHazards");
+  const sbTotalLog = document.getElementById("sidebarTotalLogged");
+  const sbTodayLog = document.getElementById("sidebarTodayLogged");
+  const sbSevereLog = document.getElementById("sidebarSevereLogged");
+  const sbReviewLog = document.getElementById("sidebarReviewLogged");
+  if (sbTotal) sbTotal.textContent = hazards.length;
+  if (sbTotalLog) sbTotalLog.textContent = hazards.length;
+  if (sbTodayLog) sbTodayLog.textContent = loggedToday.length;
+  if (sbSevereLog) sbSevereLog.textContent = severeHazards.length;
+  if (sbReviewLog) sbReviewLog.textContent = pendingReview.length;
 
   const t = (k, p) => (window.i18n ? window.i18n.t(k, p) : k);
 
@@ -414,3 +427,44 @@ if (typeof db !== "undefined") {
 } else {
   hazardListEl.innerHTML = '<div class="empty-state">Firebase is not configured yet — see README.md.</div>';
 }
+
+// ---------------------------------------------------------------
+// Sidebar Drawer Management
+// ---------------------------------------------------------------
+const hamburgerBtn = document.getElementById("hamburgerBtn");
+const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+const appSidebar = document.getElementById("appSidebar");
+const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
+const sidebarLangSelector = document.getElementById("sidebarLangSelector");
+
+function openSidebar() {
+  if (appSidebar) appSidebar.classList.add("open");
+  if (sidebarBackdrop) sidebarBackdrop.style.display = "block";
+  document.body.style.overflow = "hidden";
+}
+
+function closeSidebar() {
+  if (appSidebar) appSidebar.classList.remove("open");
+  if (sidebarBackdrop) sidebarBackdrop.style.display = "none";
+  document.body.style.overflow = "";
+}
+
+if (hamburgerBtn) hamburgerBtn.addEventListener("click", openSidebar);
+if (sidebarCloseBtn) sidebarCloseBtn.addEventListener("click", closeSidebar);
+if (sidebarBackdrop) sidebarBackdrop.addEventListener("click", closeSidebar);
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && appSidebar && appSidebar.classList.contains("open")) {
+    closeSidebar();
+  }
+});
+
+// Sync sidebar language selector with header language selector
+if (sidebarLangSelector) {
+  sidebarLangSelector.value = localStorage.getItem("safepath_lang") || "en";
+  sidebarLangSelector.addEventListener("change", (e) => {
+    if (window.i18n) window.i18n.setLanguage(e.target.value);
+    const mainLangSelect = document.getElementById("langSelector");
+    if (mainLangSelect) mainLangSelect.value = e.target.value;
+  });
+}
+

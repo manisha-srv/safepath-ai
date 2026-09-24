@@ -23,6 +23,40 @@ const queueBadge = document.getElementById("queueBadge");
 const currentSpeedDisplay = document.getElementById("currentSpeedDisplay");
 const speedGateIndicator = document.getElementById("speedGateIndicator");
 
+// Dynamic Collaborative Vehicle Proximity Radar Pill
+const vehicleRadarPill = document.getElementById("vehicleRadarPill");
+const radarPillText = document.getElementById("radarPillText");
+const radarPillDismiss = document.getElementById("radarPillDismiss");
+const simulateNearbyVehicleBtn = document.getElementById("simulateNearbyVehicleBtn");
+
+// 3-Way Alert System & Vibration Controls
+const alertModeBtn = document.getElementById("alertModeBtn");
+const alertModeIcon = document.getElementById("alertModeIcon");
+const alertModeLabel = document.getElementById("alertModeLabel");
+const vibrationToggleBtn = document.getElementById("vibrationToggleBtn");
+const vibrationToggleIcon = document.getElementById("vibrationToggleIcon");
+const vibrationToggleLabel = document.getElementById("vibrationToggleLabel");
+const testHapticHazardBtn = document.getElementById("testHapticHazardBtn");
+const testHapticSevereBtn = document.getElementById("testHapticSevereBtn");
+const testHapticProximityBtn = document.getElementById("testHapticProximityBtn");
+
+// Slide-out Sidebar Drawer Elements
+const hamburgerBtn = document.getElementById("hamburgerBtn");
+const sidebarBackdrop = document.getElementById("sidebarBackdrop");
+const appSidebar = document.getElementById("appSidebar");
+const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
+const navLinkPhotoEvidence = document.getElementById("navLinkPhotoEvidence");
+const sidebarModeSound = document.getElementById("sidebarModeSound");
+const sidebarModeVibrate = document.getElementById("sidebarModeVibrate");
+const sidebarModeSilent = document.getElementById("sidebarModeSilent");
+const sidebarVibrationToggle = document.getElementById("sidebarVibrationToggle");
+const sidebarLangSelector = document.getElementById("sidebarLangSelector");
+const sidebarSpeedVal = document.getElementById("sidebarSpeedVal");
+const sidebarRadarVehicles = document.getElementById("sidebarRadarVehicles");
+const sidebarSensorsStatus = document.getElementById("sidebarSensorsStatus");
+const sidebarGateStatus = document.getElementById("sidebarGateStatus");
+const sidebarTotalHazards = document.getElementById("sidebarTotalHazards");
+
 // Cockpit HUD Elements
 const cockpitHudOverlay = document.getElementById("cockpitHudOverlay");
 const hudToggleBtn = document.getElementById("hudToggleBtn");
@@ -51,7 +85,7 @@ const IMPACT_THRESHOLD = 22; // total acceleration magnitude (m/s^2)
 const ROTATION_THRESHOLD = 50; // deg/s rotational jolt from pothole drop
 const MIN_SECONDS_BETWEEN_HITS = 4; // cooldown seconds
 const ALERT_RADIUS_METERS = 120; // proximity alert distance
-const SPEED_GATE_MIN_KMH = 15; // Speed gate: require > 15 km/h to prevent phone pick-up false hits
+const SPEED_GATE_MIN_KMH = 12; // Speed gate: require >= 12 km/h to prevent phone pick-up/walking false hits
 
 let map, driverMarker;
 let currentPos = null; // { lat, lng }
@@ -93,18 +127,148 @@ function getAudioContext() {
   return audioCtx;
 }
 
+// ---------------------------------------------------------------
+// 3-Way Alert System (Sound / Vibrate / Silent) & Web Vibration API
+// 🔊 Sound: Spoken voice alerts + Web Audio chime + haptic vibration.
+// 📳 Vibrate: Tactile physical pulses only, completely quiet (peaceful driving).
+// 🔇 Silent: Visual screen & map notifications only, zero audio and zero vibration.
+// ---------------------------------------------------------------
+const ALERT_MODE_KEY = "safepath_alert_mode";
+const VIBRATION_ENABLED_KEY = "safepath_vibration_enabled";
+
+// Haptic tactile pulse patterns (navigator.vibrate)
+const HAPTIC_PATTERNS = {
+  hazard: [250, 100, 250],               // Hazard Alert: Two sharp, physical tactile pulses through the phone mount
+  severe: [400, 120, 400, 120, 500],      // Severe Crater: Three heavy warning pulses
+  proximity: [120, 80, 120],             // Vehicle Proximity Alert: Gentle double-tap buzz
+  tap: [40],                             // Subtle UI toggle feedback
+};
+
+let currentAlertMode = localStorage.getItem(ALERT_MODE_KEY) || "sound"; // "sound" | "vibrate" | "silent"
+let vibrationEnabled = localStorage.getItem(VIBRATION_ENABLED_KEY) !== "false";
+
+function getAlertMode() {
+  return currentAlertMode;
+}
+
+function setAlertMode(mode) {
+  currentAlertMode = mode;
+  localStorage.setItem(ALERT_MODE_KEY, mode);
+  updateAlertModeUI();
+  document.dispatchEvent(new CustomEvent("safepath-alert-mode-changed", { detail: { mode } }));
+
+  // Immediate tactile or chime preview on mode change
+  if (mode === "vibrate") {
+    triggerHaptic("tap");
+  } else if (mode === "sound") {
+    playPreAlertChime("minor");
+  }
+}
+
+function isVibrationEnabled() {
+  return vibrationEnabled;
+}
+
+function setVibrationEnabled(enabled) {
+  vibrationEnabled = !!enabled;
+  localStorage.setItem(VIBRATION_ENABLED_KEY, vibrationEnabled ? "true" : "false");
+  updateVibrationToggleUI();
+  if (vibrationEnabled) {
+    triggerHaptic("tap");
+  }
+}
+
+function canPlayAudio() {
+  return currentAlertMode === "sound";
+}
+
+function canVibrate() {
+  return (
+    (currentAlertMode === "sound" || currentAlertMode === "vibrate") &&
+    vibrationEnabled &&
+    typeof navigator !== "undefined" &&
+    typeof navigator.vibrate === "function"
+  );
+}
+
+function triggerHaptic(type) {
+  if (!canVibrate()) return;
+  try {
+    const pattern = HAPTIC_PATTERNS[type] || type;
+    navigator.vibrate(pattern);
+  } catch (e) {
+    console.warn("Haptic vibration error:", e);
+  }
+}
+
+function updateAlertModeUI() {
+  const btn = document.getElementById("alertModeBtn");
+  const icon = document.getElementById("alertModeIcon");
+  const label = document.getElementById("alertModeLabel");
+
+  if (btn && icon && label) {
+    btn.classList.remove("mode-sound", "mode-vibrate", "mode-silent");
+    btn.classList.add(`mode-${currentAlertMode}`);
+
+    if (currentAlertMode === "sound") {
+      icon.textContent = "🔊";
+      label.textContent = window.i18n ? window.i18n.t("alert_mode_sound") : "Sound";
+      btn.setAttribute("title", "Alert Mode: Sound (Voice + Chime + Haptics)");
+    } else if (currentAlertMode === "vibrate") {
+      icon.textContent = "📳";
+      label.textContent = window.i18n ? window.i18n.t("alert_mode_vibrate") : "Vibrate";
+      btn.setAttribute("title", "Alert Mode: Vibrate (Tactile physical pulses only, completely quiet)");
+    } else {
+      icon.textContent = "🔇";
+      label.textContent = window.i18n ? window.i18n.t("alert_mode_silent") : "Silent";
+      btn.setAttribute("title", "Alert Mode: Silent (Visual screen & map only, zero audio/vibration)");
+    }
+  }
+
+  // Sync sidebar drawer mode buttons
+  const soundBtn = document.getElementById("sidebarModeSound");
+  const vibBtn = document.getElementById("sidebarModeVibrate");
+  const silentBtn = document.getElementById("sidebarModeSilent");
+  if (soundBtn) soundBtn.classList.toggle("active", currentAlertMode === "sound");
+  if (vibBtn) vibBtn.classList.toggle("active", currentAlertMode === "vibrate");
+  if (silentBtn) silentBtn.classList.toggle("active", currentAlertMode === "silent");
+}
+
+function cycleAlertMode() {
+  if (currentAlertMode === "sound") setAlertMode("vibrate");
+  else if (currentAlertMode === "vibrate") setAlertMode("silent");
+  else setAlertMode("sound");
+}
+
+function updateVibrationToggleUI() {
+  const btn = document.getElementById("vibrationToggleBtn");
+  const label = document.getElementById("vibrationToggleLabel");
+  const sidebarCheck = document.getElementById("sidebarVibrationToggle");
+
+  if (btn && label) {
+    btn.classList.toggle("off", !vibrationEnabled);
+    label.textContent = vibrationEnabled
+      ? (window.i18n ? window.i18n.t("vibration_on") : "Haptics ON")
+      : (window.i18n ? window.i18n.t("vibration_off") : "Haptics OFF");
+  }
+  if (sidebarCheck) {
+    sidebarCheck.checked = vibrationEnabled;
+  }
+}
+
 function playPreAlertChime(severity = "minor") {
+  if (!canPlayAudio()) return Promise.resolve();
   return new Promise((resolve) => {
     try {
       const ctx = getAudioContext();
       if (!ctx) {
-        setTimeout(resolve, 500);
+        setTimeout(resolve, 300);
         return;
       }
 
       const now = ctx.currentTime;
       if (severity === "severe") {
-        // Urgent, attention-demanding 3-tone chime for severe craters (587Hz -> 880Hz -> 1174Hz)
+        // Urgent 3-tone chime for severe craters (587Hz -> 880Hz -> 1174Hz)
         const tones = [
           { freq: 587.33, start: 0, dur: 0.1 },
           { freq: 880.00, start: 0.09, dur: 0.1 },
@@ -123,7 +287,6 @@ function playPreAlertChime(severity = "minor") {
           osc.start(now + start);
           osc.stop(now + start + dur);
         });
-        // 0.36s tone duration + 500ms pre-alert silence cue = ~860ms
         setTimeout(resolve, 860);
       } else {
         // Pleasant two-tone warning chime (D5: 587.33 Hz -> A5: 880 Hz)
@@ -144,14 +307,42 @@ function playPreAlertChime(severity = "minor") {
           osc.start(now + start);
           osc.stop(now + start + dur);
         });
-        // 0.31s tone duration + 500ms pre-alert silence cue = ~810ms
         setTimeout(resolve, 810);
       }
     } catch (e) {
       console.warn("Audio chime error:", e);
-      setTimeout(resolve, 500);
+      setTimeout(resolve, 300);
     }
   });
+}
+
+// Gentle Radar Proximity Chime for Collaborative Vehicle Radar (Double-ping)
+function playRadarProximityChime() {
+  if (!canPlayAudio()) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const tones = [
+      { freq: 784.0, start: 0, dur: 0.1 },
+      { freq: 1046.5, start: 0.08, dur: 0.16 },
+    ];
+    tones.forEach(({ freq, start, dur }) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now + start);
+      gain.gain.setValueAtTime(0, now + start);
+      gain.gain.linearRampToValueAtTime(0.22, now + start + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + start);
+      osc.stop(now + start + dur);
+    });
+  } catch (e) {
+    console.warn("Radar chime error:", e);
+  }
 }
 
 // ---------------------------------------------------------------
@@ -203,10 +394,14 @@ function updateSpeedTelemetry(speedKmh) {
   if (hudSpeedVal) {
     hudSpeedVal.textContent = currentSpeedKmH;
   }
+  const sbSpeed = document.getElementById("sidebarSpeedVal");
+  if (sbSpeed) {
+    sbSpeed.textContent = currentSpeedKmH;
+  }
 
   const isArmed = currentSpeedKmH >= SPEED_GATE_MIN_KMH;
-  const armedText = window.i18n ? window.i18n.t("speed_gate_armed") : "Speed Gate: Armed (>15 km/h)";
-  const gatedText = window.i18n ? window.i18n.t("speed_gate_gated") : "Speed Gate: Gated (<15 km/h — filtering false jostles)";
+  const armedText = window.i18n ? window.i18n.t("speed_gate_armed") : "Speed Gate: Armed (>12 km/h)";
+  const gatedText = window.i18n ? window.i18n.t("speed_gate_gated") : "Speed Gate: Gated (<12 km/h — filtering false jostles)";
 
   if (speedGateIndicator) {
     speedGateIndicator.textContent = isArmed ? armedText : gatedText;
@@ -219,6 +414,11 @@ function updateSpeedTelemetry(speedKmh) {
     hudSpeedGateBadge.classList.toggle("armed", isArmed);
     hudSpeedGateBadge.classList.toggle("gated", !isArmed);
   }
+
+  const sbGate = document.getElementById("sidebarGateStatus");
+  if (sbGate) {
+    sbGate.textContent = isArmed ? "ARMED (>12)" : "GATED (<12)";
+  }
 }
 
 // ---------------------------------------------------------------
@@ -229,6 +429,11 @@ function startGPS() {
     setStatus(false, "status_gps_unavailable", "GPS is not available on this device/browser.");
     return;
   }
+
+  // Start Collaborative Beacon & Listeners
+  startDriverBeacon();
+  listenToActiveDrivers();
+
   navigator.geolocation.watchPosition(
     (pos) => {
       const now = Date.now();
@@ -249,6 +454,10 @@ function startGPS() {
       lastGpsPos = { lat, lng };
       lastGpsTime = now;
       updateSpeedTelemetry(speedKmh);
+
+      // Broadcast ephemeral beacon & recalculate vehicle proximity
+      broadcastDriverBeacon();
+      updateNearbyVehicles();
 
       // Trigger radar update for HUD
       if (hudActive) {
@@ -387,13 +596,20 @@ function handleHazardDetected(source, overrideType = null, overrideMag = null) {
   const magnitude = overrideMag !== null ? overrideMag : lastCalculatedMagnitude;
   const severity = getSeverityRating(magnitude);
 
-  // SPEED-GATED DETECTION (Modification #2)
-  // Prevent false positives from phone handling, walking, or cupholder jostles
+  // SPEED-GATED FALSE POSITIVE FILTER (< 12 km/h)
+  // Automatically filters out bumps caused by walking or picking up phone from a cupholder
   if (source === "sensor") {
     if (currentSpeedKmH < SPEED_GATE_MIN_KMH) {
-      console.log(`[SafePath AI] Sensor hit filtered by speed gate: ${currentSpeedKmH} km/h < 15 km/h`);
-      const ignoredMsg = window.i18n ? window.i18n.t("speed_gate_ignored") : "Jostle ignored: Vehicle speed below 15 km/h";
+      console.log(`[SafePath AI] Sensor hit filtered by speed gate: ${currentSpeedKmH} km/h < 12 km/h`);
+      const ignoredMsg = window.i18n ? window.i18n.t("speed_gate_ignored") : "Jostle ignored: Vehicle speed below 12 km/h";
       setStatus(true, "speed_gate_ignored", ignoredMsg);
+
+      // Flashing visual cue on speed gate badge
+      if (speedGateIndicator) {
+        speedGateIndicator.classList.add("gate-flash");
+        setTimeout(() => speedGateIndicator.classList.remove("gate-flash"), 1500);
+      }
+
       setTimeout(() => {
         setStatus(true, "status_monitoring", "Monitoring live. Drive normally — hazards log automatically.");
       }, 3500);
@@ -453,11 +669,11 @@ async function logHazard(lat, lng, source, hazardType = "pothole", severity = "m
 
   addSessionLogEntry(hazard);
 
-  // 1. Play Pre-Alert Audio Chime (0.5s pause before voice alert)
+  // 1. Play Pre-Alert Audio Chime (0.5s pause before voice alert) - only if sound enabled
   await playPreAlertChime(severity);
 
-  // 2. Multilingual Voice Speech Alert
-  if (window.i18n) {
+  // 2. Multilingual Voice Speech Alert - only if sound enabled
+  if (canPlayAudio() && window.i18n) {
     if (severity === "severe") {
       window.i18n.speak("voice_severe_detected");
     } else if (hazardType === "speed_breaker") {
@@ -467,15 +683,24 @@ async function logHazard(lat, lng, source, hazardType = "pothole", severity = "m
     }
   }
 
+  // 3. Tactile Physical Pulses through Phone Mount - only if vibrate enabled
+  if (canVibrate()) {
+    triggerHaptic(severity === "severe" ? "severe" : "hazard");
+  }
+
   // Update dropzone hint
   if (dropzoneHint) {
     const timeStr = new Date(hazard.timestamp).toLocaleTimeString();
     dropzoneHint.textContent = `Attached to ${typeLabel.toLowerCase()} detected at ${timeStr}`;
   }
 
-  // Update HUD
+  // Update HUD & Sidebar stats
   if (hudSessionHazards) {
     hudSessionHazards.textContent = sessionLogs.length;
+  }
+  const sbTotal = document.getElementById("sidebarTotalHazards");
+  if (sbTotal) {
+    sbTotal.textContent = sessionLogs.length;
   }
 }
 
@@ -859,10 +1084,11 @@ function listenForKnownHazards() {
       if (dist < ALERT_RADIUS_METERS) {
         alertedHazardIds.add(id);
 
-        // Play pre-alert audio chime (0.5s pause before voice)
+        // 1. Play pre-alert audio chime (0.5s pause before voice) - only if sound enabled
         await playPreAlertChime(hazard.severity || "minor");
 
-        if (window.i18n) {
+        // 2. Multilingual Voice Alert - only if sound enabled
+        if (canPlayAudio() && window.i18n) {
           if (hazard.severity === "severe") {
             window.i18n.speak("voice_severe_ahead");
           } else if (hazard.hazardType === "speed_breaker") {
@@ -871,13 +1097,250 @@ function listenForKnownHazards() {
             window.i18n.speak("voice_pothole_ahead");
           }
         }
+
+        // 3. Tactile Physical Haptic Pulses through Phone Mount - only if vibrate enabled
+        if (canVibrate()) {
+          triggerHaptic(hazard.severity === "severe" ? "severe" : "hazard");
+        }
       }
     }, 2500);
   });
 }
 
 // ---------------------------------------------------------------
-// Cockpit HUD Mode Controller (Modification #5)
+// Live Collaborative Vehicle Proximity Radar
+// Active drivers broadcast ephemeral GPS beacons to Firebase (active_drivers/{id})
+// with automatic cleanup on disconnect. Nearby drivers (<150m) trigger dynamic
+// radar pill: "Vehicle Nearby (~85m away)", gentle radar chime, and double-tap buzz.
+// ---------------------------------------------------------------
+const DRIVER_ID_STORAGE_KEY = "safepath_driver_beacon_id";
+let driverBeaconId = localStorage.getItem(DRIVER_ID_STORAGE_KEY);
+if (!driverBeaconId) {
+  driverBeaconId = "driver_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 7);
+  localStorage.setItem(DRIVER_ID_STORAGE_KEY, driverBeaconId);
+}
+
+let activeDriverRef = null;
+let beaconInterval = null;
+const otherDriversMap = new Map(); // id -> { id, lat, lng, speed, updatedAt, marker }
+let simulatedNearbyDriver = null;
+let lastNearbyAlertTime = 0;
+
+function startDriverBeacon() {
+  if (typeof db === "undefined" || !db) return;
+  activeDriverRef = db.ref(`active_drivers/${driverBeaconId}`);
+  activeDriverRef.onDisconnect().remove();
+
+  broadcastDriverBeacon();
+  if (!beaconInterval) {
+    beaconInterval = setInterval(broadcastDriverBeacon, 3500);
+  }
+}
+
+function broadcastDriverBeacon() {
+  if (!activeDriverRef || !currentPos) return;
+  activeDriverRef.set({
+    id: driverBeaconId,
+    lat: currentPos.lat,
+    lng: currentPos.lng,
+    speed: currentSpeedKmH,
+    email: window.currentUser ? window.currentUser.email : null,
+    updatedAt: firebase.database.ServerValue.TIMESTAMP || Date.now(),
+  });
+}
+
+function stopDriverBeacon() {
+  if (beaconInterval) {
+    clearInterval(beaconInterval);
+    beaconInterval = null;
+  }
+  if (activeDriverRef) {
+    activeDriverRef.remove().catch(() => {});
+  }
+}
+
+window.addEventListener("beforeunload", stopDriverBeacon);
+window.addEventListener("pagehide", stopDriverBeacon);
+
+function listenToActiveDrivers() {
+  if (typeof db === "undefined" || !db) return;
+  const driversRef = db.ref("active_drivers");
+
+  driversRef.on("child_added", (snap) => {
+    const id = snap.key;
+    if (id === driverBeaconId) return;
+    const data = snap.val();
+    if (data && data.lat && data.lng) {
+      otherDriversMap.set(id, data);
+      updateNearbyVehicles();
+    }
+  });
+
+  driversRef.on("child_changed", (snap) => {
+    const id = snap.key;
+    if (id === driverBeaconId) return;
+    const data = snap.val();
+    if (data && data.lat && data.lng) {
+      const existing = otherDriversMap.get(id);
+      otherDriversMap.set(id, { ...existing, ...data });
+      updateNearbyVehicles();
+    }
+  });
+
+  driversRef.on("child_removed", (snap) => {
+    const id = snap.key;
+    const existing = otherDriversMap.get(id);
+    if (existing && existing.marker && map) {
+      map.removeLayer(existing.marker);
+    }
+    otherDriversMap.delete(id);
+    updateNearbyVehicles();
+  });
+}
+
+function updateNearbyVehicles() {
+  if (!currentPos || !map) return;
+  const now = Date.now();
+  let nearestDist = Infinity;
+  let nearestDriver = null;
+
+  // Stale drivers cleanup (> 45s)
+  const allDrivers = [];
+  otherDriversMap.forEach((driver, id) => {
+    if (now - (driver.updatedAt || 0) > 45000) {
+      if (driver.marker) map.removeLayer(driver.marker);
+      otherDriversMap.delete(id);
+      return;
+    }
+    allDrivers.push(driver);
+  });
+
+  if (simulatedNearbyDriver) {
+    allDrivers.push(simulatedNearbyDriver);
+  }
+
+  // Update sidebar nearby driver count
+  const sbRadar = document.getElementById("sidebarRadarVehicles");
+  if (sbRadar) {
+    sbRadar.textContent = allDrivers.length;
+  }
+
+  for (const driver of allDrivers) {
+    const dist = haversineMeters(currentPos.lat, currentPos.lng, driver.lat, driver.lng);
+    updateVehicleMapMarker(driver, dist);
+
+    if (dist < nearestDist) {
+      nearestDist = dist;
+      nearestDriver = driver;
+    }
+  }
+
+  // Collaborative proximity radar threshold: 150 meters
+  if (nearestDriver && nearestDist <= 150) {
+    showVehicleRadarAlert(nearestDist);
+  } else if (!nearestDriver || nearestDist > 165) {
+    hideVehicleRadarAlert();
+  }
+}
+
+function updateVehicleMapMarker(driver, dist) {
+  if (!map) return;
+  const rounded = Math.round(dist);
+  if (!driver.marker) {
+    const icon = L.divIcon({
+      className: "radar-vehicle-marker-wrapper",
+      html: `<div class="radar-vehicle-marker"><span class="radar-pulse-ring"></span><span class="car-badge">🚘</span></div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+    });
+    driver.marker = L.marker([driver.lat, driver.lng], { icon }).addTo(map);
+    driver.marker.bindPopup(
+      `<strong>🚗 Collaborative Driver</strong><br>Distance: ~${rounded}m<br>Speed: ${driver.speed || 0} km/h`
+    );
+  } else {
+    driver.marker.setLatLng([driver.lat, driver.lng]);
+    driver.marker.setPopupContent(
+      `<strong>🚗 Collaborative Driver</strong><br>Distance: ~${rounded}m<br>Speed: ${driver.speed || 0} km/h`
+    );
+  }
+}
+
+function showVehicleRadarAlert(dist) {
+  const pill = document.getElementById("vehicleRadarPill");
+  const pillText = document.getElementById("radarPillText");
+  if (!pill || !pillText) return;
+
+  const rounded = Math.round(dist);
+  pillText.textContent = `Vehicle Nearby (~${rounded}m away)`;
+  pill.style.display = "flex";
+
+  // Trigger gentle radar chime & subtle double-tap haptic buzz (cooldown: 12 seconds)
+  const now = Date.now();
+  if (now - lastNearbyAlertTime > 12000) {
+    lastNearbyAlertTime = now;
+    playRadarProximityChime();
+    triggerHaptic("proximity"); // Gentle double-tap buzz: [120, 80, 120]
+  }
+}
+
+function hideVehicleRadarAlert() {
+  const pill = document.getElementById("vehicleRadarPill");
+  if (pill) pill.style.display = "none";
+}
+
+// ---------------------------------------------------------------
+// Slide-out Sidebar Drawer Management
+// ---------------------------------------------------------------
+function openSidebar() {
+  if (appSidebar) appSidebar.classList.add("open");
+  if (sidebarBackdrop) sidebarBackdrop.style.display = "block";
+  document.body.style.overflow = "hidden";
+}
+
+function closeSidebar() {
+  if (appSidebar) appSidebar.classList.remove("open");
+  if (sidebarBackdrop) sidebarBackdrop.style.display = "none";
+  document.body.style.overflow = "";
+}
+
+if (hamburgerBtn) hamburgerBtn.addEventListener("click", openSidebar);
+if (sidebarCloseBtn) sidebarCloseBtn.addEventListener("click", closeSidebar);
+if (sidebarBackdrop) sidebarBackdrop.addEventListener("click", closeSidebar);
+if (navLinkPhotoEvidence) {
+  navLinkPhotoEvidence.addEventListener("click", () => {
+    closeSidebar();
+    if (photoDropzone) photoDropzone.scrollIntoView({ behavior: "smooth" });
+  });
+}
+
+// ---------------------------------------------------------------
+// 3-Way Alert System & Vibration Listeners
+// ---------------------------------------------------------------
+if (alertModeBtn) {
+  alertModeBtn.addEventListener("click", cycleAlertMode);
+}
+if (vibrationToggleBtn) {
+  vibrationToggleBtn.addEventListener("click", () => {
+    setVibrationEnabled(!isVibrationEnabled());
+  });
+}
+if (sidebarVibrationToggle) {
+  sidebarVibrationToggle.addEventListener("change", (e) => {
+    setVibrationEnabled(e.target.checked);
+  });
+}
+if (sidebarModeSound) {
+  sidebarModeSound.addEventListener("click", () => setAlertMode("sound"));
+}
+if (sidebarModeVibrate) {
+  sidebarModeVibrate.addEventListener("click", () => setAlertMode("vibrate"));
+}
+if (sidebarModeSilent) {
+  sidebarModeSilent.addEventListener("click", () => setAlertMode("silent"));
+}
+
+// ---------------------------------------------------------------
+// Cockpit HUD Mode Controller
 // Ultra-High Contrast OLED Night View, Digital Speedometer, Proximity Radar
 // ---------------------------------------------------------------
 function openCockpitHud() {
@@ -1009,11 +1472,15 @@ startBtn.addEventListener("click", async () => {
   setStatus(true, "status_monitoring", "Monitoring live. Drive normally — hazards log automatically.");
   startBtn.textContent = window.i18n ? window.i18n.t("status_active") : "Monitoring Active";
 
+  const sbSensors = document.getElementById("sidebarSensorsStatus");
+  if (sbSensors) sbSensors.textContent = "ACTIVE";
+
   // Enable all demo simulation buttons
   if (simulateBtn) simulateBtn.disabled = false;
   if (simulatePotholeMinorBtn) simulatePotholeMinorBtn.disabled = false;
   if (simulatePotholeSevereBtn) simulatePotholeSevereBtn.disabled = false;
   if (simulateSpeedBreakerBtn) simulateSpeedBreakerBtn.disabled = false;
+  if (simulateNearbyVehicleBtn) simulateNearbyVehicleBtn.disabled = false;
 });
 
 // Simulation Handlers (Bypasses Speed Gate for indoor demonstration)
@@ -1035,6 +1502,33 @@ if (simulateSpeedBreakerBtn) {
   });
 }
 
+// Collaborative Vehicle Proximity Simulation (85m away)
+if (simulateNearbyVehicleBtn) {
+  simulateNearbyVehicleBtn.addEventListener("click", () => {
+    const refPos = currentPos || { lat: 20.5937, lng: 78.9629 };
+    // 85m offset (~0.00076 deg)
+    simulatedNearbyDriver = {
+      id: "sim_driver_85m",
+      lat: refPos.lat + 0.00062,
+      lng: refPos.lng + 0.00045,
+      speed: 28,
+      updatedAt: Date.now(),
+    };
+    if (!currentPos) {
+      updateDriverPosition(refPos.lat, refPos.lng);
+    }
+    updateNearbyVehicles();
+    showVehicleRadarAlert(85);
+  });
+}
+
+if (radarPillDismiss) {
+  radarPillDismiss.addEventListener("click", () => {
+    hideVehicleRadarAlert();
+    simulatedNearbyDriver = null;
+  });
+}
+
 if (simulateBtn) {
   simulateBtn.addEventListener("click", () => {
     handleHazardDetected("simulated", "pothole", 26.0);
@@ -1053,6 +1547,35 @@ if (hudChimeTestBtn) {
   });
 }
 
+// Web Vibration API Audition Buttons
+if (testHapticHazardBtn) {
+  testHapticHazardBtn.addEventListener("click", () => {
+    if (navigator.vibrate) {
+      navigator.vibrate(HAPTIC_PATTERNS.hazard);
+    } else {
+      alert("Web Vibration API is not supported on this device/browser.");
+    }
+  });
+}
+if (testHapticSevereBtn) {
+  testHapticSevereBtn.addEventListener("click", () => {
+    if (navigator.vibrate) {
+      navigator.vibrate(HAPTIC_PATTERNS.severe);
+    } else {
+      alert("Web Vibration API is not supported on this device/browser.");
+    }
+  });
+}
+if (testHapticProximityBtn) {
+  testHapticProximityBtn.addEventListener("click", () => {
+    if (navigator.vibrate) {
+      navigator.vibrate(HAPTIC_PATTERNS.proximity);
+    } else {
+      alert("Web Vibration API is not supported on this device/browser.");
+    }
+  });
+}
+
 // Cockpit HUD Toggle Listeners
 if (hudToggleBtn) {
   hudToggleBtn.addEventListener("click", openCockpitHud);
@@ -1064,15 +1587,26 @@ if (hudExitBtn) {
   hudExitBtn.addEventListener("click", closeCockpitHud);
 }
 
-// Keyboard Shortcut: [H] toggles HUD, [Esc] exits HUD
+// Keyboard Shortcut: [H] toggles HUD, [Esc] exits HUD / drawers
 window.addEventListener("keydown", (e) => {
   if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
   if (e.key === "h" || e.key === "H") {
     toggleCockpitHud();
-  } else if (e.key === "Escape" && hudActive) {
-    closeCockpitHud();
+  } else if (e.key === "Escape") {
+    if (hudActive) closeCockpitHud();
+    if (appSidebar && appSidebar.classList.contains("open")) closeSidebar();
   }
 });
+
+// Sidebar Language Sync
+if (sidebarLangSelector) {
+  sidebarLangSelector.value = localStorage.getItem("safepath_lang") || "en";
+  sidebarLangSelector.addEventListener("change", (e) => {
+    if (window.i18n) window.i18n.setLanguage(e.target.value);
+    const mainLang = document.getElementById("langSelector");
+    if (mainLang) mainLang.value = e.target.value;
+  });
+}
 
 // React to language switch dynamically
 document.addEventListener("safepath-lang-changed", () => {
@@ -1081,6 +1615,8 @@ document.addEventListener("safepath-lang-changed", () => {
   }
   updateSpeedTelemetry(currentSpeedKmH);
   updateQueueBadge();
+  updateAlertModeUI();
+  updateVibrationToggleUI();
   if (hudActive) updateCockpitHud();
 });
 
@@ -1091,3 +1627,6 @@ initMap();
 updateSpeedTelemetry(0);
 updateQueueBadge();
 trySyncQueue();
+updateAlertModeUI();
+updateVibrationToggleUI();
+

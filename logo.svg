@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+  <!-- Circular Radar Arcs (Subtle navigation radar) -->
+  <path d="M52 24 A 28 28 0 0 1 76 48" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+  <path d="M54 16 A 36 36 0 0 1 84 46" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+  <path d="M38 30 A 24 24 0 0 0 28 44" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Paved Road Path curving up to meet navigation heading -->
+  <path d="M22 82 C 24 64, 38 48, 50 38 L 42 42 C 34 50, 24 65, 22 82 Z" fill="#1e293b"/>
+  <!-- Left Amber Curb -->
+  <path d="M20 84 C 23 64, 36 48, 48 38" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Right Amber Curb -->
+  <path d="M38 84 C 41 68, 52 56, 68 50" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Road Surface Body -->
+  <path d="M20 84 C 23 64, 36 48, 48 38 L 52 40 C 44 54, 36 68, 38 84 Z" fill="#334155"/>
+  <!-- Dashed White Center Line -->
+  <path d="M29 82 C 32 68, 42 54, 50 42" stroke="#f8fafc" stroke-width="2.5" stroke-dasharray="5 4" stroke-linecap="round"/>
+
+  <!-- Navigation GPS Chevron Arrow -->
+  <g id="nav-arrow" transform="translate(4, -4)">
+    <!-- Right Wing Darker Facet for 3D Automotive Depth -->
+    <path d="M58 14 L 64 52 L 48 40 Z" fill="#0284c7"/>
+    <!-- Left Wing Bright Facet -->
+    <path d="M58 14 L 48 40 L 24 38 Z" fill="#38bdf8"/>
+    <!-- Center Highlight Edge -->
+    <path d="M58 14 L 48 40" stroke="#bae6fd" stroke-width="1.2" stroke-linecap="round"/>
+  </g>
+</svg>
